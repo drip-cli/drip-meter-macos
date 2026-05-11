@@ -168,6 +168,14 @@ public final class SettingsStore {
         didSet { defaults.set(dailyTokenTarget, forKey: Keys.dailyTokenTarget) }
     }
 
+    /// Longest consecutive-day streak the user has ever hit. Persisted
+    /// across launches so the "best ever" badge survives a quiet week.
+    /// Bumped by `DripStore.performRefresh` whenever the current streak
+    /// exceeds the stored best.
+    public var bestStreakDays: Int {
+        didSet { defaults.set(bestStreakDays, forKey: Keys.bestStreakDays) }
+    }
+
     private let defaults: UserDefaults
 
     public init(defaults: UserDefaults = .standard) {
@@ -221,6 +229,8 @@ public final class SettingsStore {
         // can lower it on quiet days or zero it to hide the feature.
         let storedTarget = defaults.integer(forKey: Keys.dailyTokenTarget)
         self.dailyTokenTarget = storedTarget > 0 ? Int64(storedTarget) : 25_000
+
+        self.bestStreakDays = defaults.integer(forKey: Keys.bestStreakDays)
     }
 
     public func resolvedBinaryOverride() -> String? {
@@ -243,5 +253,6 @@ public final class SettingsStore {
         static let preferredIDE = "io.drip-cli.dripmeter.preferredIDE"
         static let dripBinaryPathOverride = "io.drip-cli.dripmeter.dripBinaryPathOverride"
         static let dailyTokenTarget = "io.drip-cli.dripmeter.dailyTokenTarget"
+        static let bestStreakDays = "io.drip-cli.dripmeter.bestStreakDays"
     }
 }

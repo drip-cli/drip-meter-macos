@@ -453,6 +453,7 @@ private struct AdvancedPane: View {
     @State private var pendingAction: DripQuickAction?
     @State private var actionInFlight: DripQuickAction?
     @State private var lastActionResult: String?
+    @State private var lastReportPath: String?
 
     var body: some View {
         @Bindable var settings = settings
@@ -483,6 +484,25 @@ private struct AdvancedPane: View {
                     footer: "DRIP keeps everything in a single SQLite + on-disk blob cache."
                 ) {
                     StoragePanelView(storage: storage)
+                }
+            }
+
+            PaneSection(
+                "Usage report",
+                footer: "Saves a Markdown summary of your lifetime totals, streak, 7-/30-day rollups, per-agent breakdown and top files. No network — file lands wherever you pick."
+            ) {
+                Button {
+                    saveUsageReport()
+                } label: {
+                    Label("Save usage report…", systemImage: "square.and.arrow.up")
+                }
+                if let path = lastReportPath {
+                    Text("Saved to \(path)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .truncationMode(.middle)
+                        .textSelection(.enabled)
                 }
             }
 
@@ -592,6 +612,37 @@ private struct AdvancedPane: View {
                 lastActionResult = "Failed: \(error.localizedDescription)"
             }
             actionInFlight = nil
+        }
+    }
+
+    private func saveUsageReport() {
+        let history = store.report.history ?? []
+        let activeThisWeek = history.rollup(windowDays: 7, label: "").activeDays
+        let input = UsageReport.Input(
+            report: store.report,
+            agents: store.agents,
+            topFiles: store.topFiles,
+            currentStreak: store.streakDays,
+            bestStreak: settings.bestStreakDays,
+            activeDaysThisWeek: activeThisWeek,
+            pricePerMtok: settings.costModel.pricePerMtok
+        )
+        let markdown = UsageReport.markdown(input)
+
+        let panel = NSSavePanel()
+        panel.title = "Save DRIP usage report"
+        panel.nameFieldStringValue = UsageReport.suggestedFilename()
+        panel.allowedContentTypes = [.init(filenameExtension: "md") ?? .plainText]
+        panel.canCreateDirectories = true
+        panel.directoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+
+        let response = panel.runModal()
+        guard response == .OK, let url = panel.url else { return }
+        do {
+            try markdown.write(to: url, atomically: true, encoding: .utf8)
+            lastReportPath = url.path
+        } catch {
+            lastReportPath = "Failed: \(error.localizedDescription)"
         }
     }
 

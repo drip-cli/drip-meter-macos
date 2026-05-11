@@ -166,6 +166,9 @@ public final class DripStore {
             self.sessions = sessions
             self.todayTotal = today
             self.streakDays = streak
+            if streak > settings.bestStreakDays {
+                settings.bestStreakDays = streak
+            }
             self.agentQuotas = CodexBarBridge.fetchQuotas()
             self.codexBarInstalled = CodexBarBridge.isInstalled
             self.loadState = .loaded(at: Date())

@@ -2,8 +2,8 @@ import DripMeterCore
 import SwiftUI
 
 /// Overview tab. Owns the big "X tokens saved" hero card plus several
-/// subordinate panels. Order matters: hero → daily target → compaction →
-/// per-agent → cost projection → top files → sparkline. Each one renders
+/// subordinate panels. Order matters: hero → streak → rollup → compaction
+/// → per-agent → cost → top files → activity heatmap. Each one renders
 /// only when there's something meaningful to show.
 struct OverviewTabView: View {
     @Environment(DripStore.self) private var store
@@ -15,11 +15,18 @@ struct OverviewTabView: View {
 
             if settings.dailyTokenTarget > 0 {
                 Divider()
-                DailyTargetView(
+                StreakPanelView(
                     today: store.todayTotal,
                     target: settings.dailyTokenTarget,
-                    streak: store.streakDays
+                    streak: store.streakDays,
+                    bestStreak: settings.bestStreakDays,
+                    history: store.report.history ?? []
                 )
+            }
+
+            if let history = store.report.history, history.count >= 2 {
+                Divider()
+                PeriodStatsView(history: history)
             }
 
             if let compaction = store.report.compaction,
@@ -42,9 +49,13 @@ struct OverviewTabView: View {
                 Divider()
                 TopFilesView(files: Array(store.report.top.prefix(3)))
             }
+
             if let history = store.report.history, !history.isEmpty {
                 Divider()
-                HistorySparklineView(history: history)
+                ActivityHeatmapView(
+                    history: history,
+                    bestStreak: settings.bestStreakDays
+                )
             }
         }
     }
