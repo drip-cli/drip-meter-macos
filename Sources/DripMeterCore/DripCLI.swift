@@ -37,23 +37,18 @@ public actor DripCLI {
     }
 
     public func meterReport() async throws -> MeterReport {
-        let payload = try await run(["meter", "--json"])
+        // Always pass `--history` so the JSON includes the `history`
+        // array (per-day buckets). Without it DRIP omits the field
+        // entirely and the rollup / heatmap panels stay invisible
+        // because they gate on `report.history`. The extra GROUP BY
+        // is cheap (single sweep over `lifetime_daily`).
+        let payload = try await run(["meter", "--history", "--json"])
         do {
             let data = Data(payload.utf8)
             let report = try JSONDecoder().decode(MeterReport.self, from: data)
             return report
         } catch {
             logger.error("Failed to decode meter --json: \(error.localizedDescription, privacy: .public)")
-            throw DripCLIError.decodeFailed(underlying: error, payload: payload)
-        }
-    }
-
-    public func meterHistory() async throws -> MeterReport {
-        let payload = try await run(["meter", "--history", "--json"])
-        let data = Data(payload.utf8)
-        do {
-            return try JSONDecoder().decode(MeterReport.self, from: data)
-        } catch {
             throw DripCLIError.decodeFailed(underlying: error, payload: payload)
         }
     }
