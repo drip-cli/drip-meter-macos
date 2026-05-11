@@ -118,6 +118,22 @@ public struct MeterReport: Codable, Sendable, Equatable {
         public let tokensSaved: Int64
         public let reductionPct: Int
 
+        public init(
+            day: String,
+            reads: Int64,
+            tokensFull: Int64,
+            tokensSent: Int64,
+            tokensSaved: Int64,
+            reductionPct: Int
+        ) {
+            self.day = day
+            self.reads = reads
+            self.tokensFull = tokensFull
+            self.tokensSent = tokensSent
+            self.tokensSaved = tokensSaved
+            self.reductionPct = reductionPct
+        }
+
         public var id: String { day }
 
         enum CodingKeys: String, CodingKey {

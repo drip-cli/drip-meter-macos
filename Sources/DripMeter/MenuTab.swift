@@ -4,6 +4,7 @@ import SwiftUI
 /// single segmented control that switches the lower scroll region.
 enum MenuTab: String, CaseIterable, Identifiable {
     case overview
+    case stats
     case agents
     case files
     case live
@@ -13,6 +14,7 @@ enum MenuTab: String, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .overview: "Overview"
+        case .stats: "Stats"
         case .agents: "Agents"
         case .files: "Files"
         case .live: "Live"
@@ -22,6 +24,7 @@ enum MenuTab: String, CaseIterable, Identifiable {
     var symbolName: String {
         switch self {
         case .overview: "chart.bar.fill"
+        case .stats: "calendar"
         case .agents: "person.2.fill"
         case .files: "doc.on.doc.fill"
         case .live: "dot.radiowaves.left.and.right"

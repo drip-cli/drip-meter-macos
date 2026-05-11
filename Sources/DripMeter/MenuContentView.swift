@@ -52,6 +52,8 @@ struct MenuContentView: View {
                     switch tab {
                     case .overview:
                         OverviewTabView()
+                    case .stats:
+                        StatsTabView()
                     case .agents:
                         AgentsTabView()
                     case .files:

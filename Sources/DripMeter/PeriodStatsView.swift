@@ -42,9 +42,14 @@ struct PeriodStatsView: View {
                 KPITile(label: "Active", value: "\(stats.activeDays)/\(stats.windowDays)", accent: .blue, sub: "days")
             }
 
-            if !stats.buckets.isEmpty {
-                MiniBars(buckets: stats.buckets, peak: stats.peakDay?.tokensSaved ?? 0)
-            }
+            // Always render a full N-day strip even if history only has
+            // 1 or 2 buckets — pad missing days with zero. Otherwise
+            // Swift Charts stretches the lone non-empty bar across the
+            // whole frame, which reads as a hideous orange wall.
+            MiniBars(
+                buckets: paddedWindow(stats.buckets, windowDays: stats.windowDays),
+                peak: stats.peakDay?.tokensSaved ?? 0
+            )
 
             if stats.tokensFull > 0 {
                 HStack(spacing: 4) {
@@ -70,6 +75,37 @@ struct PeriodStatsView: View {
         formatter.dateFormat = "yyyy-MM-dd"
         formatter.timeZone = TimeZone(identifier: "UTC")
         return formatter.date(from: s)
+    }
+
+    /// Build a continuous `windowDays`-long strip ending today (UTC).
+    /// Any day not present in `buckets` becomes a zero-token entry, so
+    /// the chart always shows the same number of bars and the existing
+    /// activity is positioned where it actually happened in time —
+    /// instead of one giant bar taking up the whole frame.
+    private func paddedWindow(_ buckets: [MeterReport.DayBucket], windowDays: Int) -> [MeterReport.DayBucket] {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC") ?? .current
+
+        var byDay: [String: MeterReport.DayBucket] = [:]
+        for bucket in buckets { byDay[bucket.day] = bucket }
+
+        let today = Date()
+        return (0 ..< windowDays).reversed().map { offset in
+            let date = calendar.date(byAdding: .day, value: -offset, to: today) ?? today
+            let key = formatter.string(from: date)
+            if let real = byDay[key] { return real }
+            return MeterReport.DayBucket(
+                day: key,
+                reads: 0,
+                tokensFull: 0,
+                tokensSent: 0,
+                tokensSaved: 0,
+                reductionPct: 0
+            )
+        }
     }
 }
 
