@@ -35,31 +35,23 @@ struct ActivityHeatmapView: View {
                     .monospacedDigit()
             }
 
-            // Cell size is computed from the available width so the
-            // grid always fills the container. Wrapped in a Color.clear
-            // with `.aspectRatio(weeks:7, .fit)` so the frame's HEIGHT
-            // is derived from its width — previous fixed-height frame
-            // clipped the 7 rows into ~5 rows worth of pixels and the
-            // overflow looked like a layout bug.
+            // Grid sized via aspectRatio on a Color.clear hull — no
+            // GeometryReader, because GR inside a ScrollView re-measures
+            // mid-scroll and the grid jittered/clipped as a result. The
+            // hull's frame width is set by the parent; aspectRatio
+            // pins height to `width * 7/cols`. Each cell uses
+            // `aspectRatio(1, .fit)` so it stays square while flexing
+            // to fill its column's slice. Result: full-width lattice
+            // that doesn't recalculate during scroll.
             let columns = max(1, grid.weeks.count)
             Color.clear
                 .aspectRatio(CGFloat(columns) / 7.0, contentMode: .fit)
                 .overlay {
-                    GeometryReader { proxy in
-                        let spacing: CGFloat = 3
-                        let cellSize = max(
-                            4,
-                            (proxy.size.width - CGFloat(columns - 1) * spacing) / CGFloat(columns)
-                        )
-                        HStack(alignment: .top, spacing: spacing) {
-                            ForEach(grid.weeks.indices, id: \.self) { weekIdx in
-                                VStack(spacing: spacing) {
-                                    ForEach(grid.weeks[weekIdx].indices, id: \.self) { dayIdx in
-                                        HeatCell(
-                                            cell: grid.weeks[weekIdx][dayIdx],
-                                            size: cellSize
-                                        )
-                                    }
+                    HStack(alignment: .top, spacing: 3) {
+                        ForEach(grid.weeks.indices, id: \.self) { weekIdx in
+                            VStack(spacing: 3) {
+                                ForEach(grid.weeks[weekIdx].indices, id: \.self) { dayIdx in
+                                    HeatCell(cell: grid.weeks[weekIdx][dayIdx])
                                 }
                             }
                         }
@@ -179,15 +171,19 @@ struct ActivityHeatmapView: View {
 
 private struct HeatCell: View {
     let cell: ActivityHeatmapView.Cell
-    let size: CGFloat
 
     var body: some View {
-        RoundedRectangle(cornerRadius: max(2, size * 0.18))
+        // No fixed width/height — `aspectRatio(1, .fit)` makes each
+        // cell square while flexing to fill its slice of the parent
+        // VStack. The parent (Color.clear with aspectRatio 13/7)
+        // guarantees each cell ends up the same square pixel size
+        // without any GeometryReader recalculation.
+        RoundedRectangle(cornerRadius: 3)
             .fill(cell.isPlaceholder ? Color.clear : Self.color(for: cell.level))
-            .frame(width: size, height: size)
+            .aspectRatio(1, contentMode: .fit)
             .overlay(
                 cell.isToday
-                    ? RoundedRectangle(cornerRadius: max(2, size * 0.2))
+                    ? RoundedRectangle(cornerRadius: 3.5)
                         .stroke(DripPalette.green, lineWidth: 1)
                     : nil
             )
