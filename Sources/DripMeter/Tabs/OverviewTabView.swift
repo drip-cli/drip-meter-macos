@@ -2,9 +2,11 @@ import DripMeterCore
 import SwiftUI
 
 /// Overview tab. Owns the big "X tokens saved" hero card plus several
-/// subordinate panels. Order matters: hero → streak → rollup → compaction
-/// → per-agent → cost → top files → activity heatmap. Each one renders
-/// only when there's something meaningful to show.
+/// subordinate panels. Order matters: hero → streak → rollup → heatmap
+/// → compaction → per-agent → cost → top files. The heatmap sits right
+/// after the rollup so it's reachable without scrolling on a default-
+/// height popover. Each panel renders only when there's something
+/// meaningful to show.
 struct OverviewTabView: View {
     @Environment(DripStore.self) private var store
     @Environment(SettingsStore.self) private var settings
@@ -29,6 +31,19 @@ struct OverviewTabView: View {
                 PeriodStatsView(history: history)
             }
 
+            // Heatmap renders even on the very first day, when DRIP has
+            // a single history bucket — the grid shows mostly-empty
+            // cells with today's lit, which is itself a satisfying
+            // "you started today" view. Without this the panel would
+            // hide for new users and look broken.
+            if let history = store.report.history {
+                Divider()
+                ActivityHeatmapView(
+                    history: history,
+                    bestStreak: settings.bestStreakDays
+                )
+            }
+
             if let compaction = store.report.compaction,
                compaction.totalCompactions > 0 {
                 Divider()
@@ -48,14 +63,6 @@ struct OverviewTabView: View {
             if !store.report.top.isEmpty {
                 Divider()
                 TopFilesView(files: Array(store.report.top.prefix(3)))
-            }
-
-            if let history = store.report.history, !history.isEmpty {
-                Divider()
-                ActivityHeatmapView(
-                    history: history,
-                    bestStreak: settings.bestStreakDays
-                )
             }
         }
     }
