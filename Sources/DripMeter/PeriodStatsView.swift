@@ -182,19 +182,38 @@ private struct KPITile: View {
 }
 
 /// Tiny inline bar chart driven by Swift Charts. Highlights the peak day
-/// in orange so the eye lands on it without needing a legend.
+/// in orange so the eye lands on it without needing a legend. X axis
+/// renders a short "MMM d" label on 3-4 evenly-spaced ticks instead of
+/// the raw ISO date — the full `yyyy-MM-dd` strings overlapped at the
+/// 7-bar width.
 private struct MiniBars: View {
     let buckets: [MeterReport.DayBucket]
     let peak: Int64
 
+    private struct BarPoint: Identifiable {
+        let id: String
+        let date: Date
+        let tokensSaved: Int64
+    }
+
+    private var points: [BarPoint] {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        return buckets.compactMap { bucket in
+            guard let date = formatter.date(from: bucket.day) else { return nil }
+            return BarPoint(id: bucket.day, date: date, tokensSaved: bucket.tokensSaved)
+        }
+    }
+
     var body: some View {
-        Chart(buckets) { bucket in
+        Chart(points) { point in
             BarMark(
-                x: .value("Day", bucket.day),
-                y: .value("Saved", bucket.tokensSaved)
+                x: .value("Day", point.date, unit: .day),
+                y: .value("Saved", point.tokensSaved)
             )
             .foregroundStyle(
-                bucket.tokensSaved == peak && peak > 0
+                point.tokensSaved == peak && peak > 0
                     ? AnyShapeStyle(LinearGradient(
                         colors: [.orange, .orange.opacity(0.6)],
                         startPoint: .top,
@@ -209,11 +228,11 @@ private struct MiniBars: View {
         .chartYAxis(.hidden)
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: 4)) { _ in
-                AxisValueLabel()
-                    .font(.system(size: 8))
-                    .foregroundStyle(Color.secondary.opacity(0.6))
+                AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                    .font(.system(size: 9))
+                    .foregroundStyle(Color.secondary.opacity(0.7))
             }
         }
-        .frame(height: 52)
+        .frame(height: 56)
     }
 }

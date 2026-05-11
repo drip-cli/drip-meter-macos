@@ -35,15 +35,31 @@ struct ActivityHeatmapView: View {
                     .monospacedDigit()
             }
 
-            HStack(alignment: .top, spacing: 3) {
-                ForEach(grid.weeks.indices, id: \.self) { weekIdx in
-                    VStack(spacing: 3) {
-                        ForEach(grid.weeks[weekIdx].indices, id: \.self) { dayIdx in
-                            HeatCell(cell: grid.weeks[weekIdx][dayIdx])
+            // Cell size is computed from the available width so the
+            // grid always fills the container. Previous version used
+            // fixed 9 px cells which left a lot of dead space on the
+            // right of the popover (and looked off-centre).
+            GeometryReader { proxy in
+                let spacing: CGFloat = 3
+                let columns = max(1, grid.weeks.count)
+                let cellSize = max(
+                    4,
+                    (proxy.size.width - CGFloat(columns - 1) * spacing) / CGFloat(columns)
+                )
+                HStack(alignment: .top, spacing: spacing) {
+                    ForEach(grid.weeks.indices, id: \.self) { weekIdx in
+                        VStack(spacing: spacing) {
+                            ForEach(grid.weeks[weekIdx].indices, id: \.self) { dayIdx in
+                                HeatCell(
+                                    cell: grid.weeks[weekIdx][dayIdx],
+                                    size: cellSize
+                                )
+                            }
                         }
                     }
                 }
             }
+            .frame(height: heatmapHeight)
 
             HStack(spacing: 8) {
                 Text("less")
@@ -67,6 +83,13 @@ struct ActivityHeatmapView: View {
             }
         }
     }
+
+    /// Approximate height the GeometryReader needs to reserve so the
+    /// grid renders before layout actually measures the width. We
+    /// shoot for a typical popover width (about 348 px of content
+    /// after the 16 px padding either side), giving ~22 px cell on a
+    /// 13-week grid → 7 × (22 + 3) - 3 ≈ 172, capped at 130 for sanity.
+    private var heatmapHeight: CGFloat { 130 }
 
     fileprivate struct Cell {
         let date: Date
@@ -157,14 +180,16 @@ struct ActivityHeatmapView: View {
 
 private struct HeatCell: View {
     let cell: ActivityHeatmapView.Cell
+    let size: CGFloat
 
     var body: some View {
-        RoundedRectangle(cornerRadius: 2)
+        RoundedRectangle(cornerRadius: max(2, size * 0.18))
             .fill(cell.isPlaceholder ? Color.clear : Self.color(for: cell.level))
-            .frame(width: 9, height: 9)
+            .frame(width: size, height: size)
             .overlay(
                 cell.isToday
-                    ? RoundedRectangle(cornerRadius: 2.5).stroke(DripPalette.green, lineWidth: 1)
+                    ? RoundedRectangle(cornerRadius: max(2, size * 0.2))
+                        .stroke(DripPalette.green, lineWidth: 1)
                     : nil
             )
             .help(cell.isPlaceholder ? "" : "\(cell.label) · \(DripFormatter.compactInteger(cell.tokensSaved)) saved")
