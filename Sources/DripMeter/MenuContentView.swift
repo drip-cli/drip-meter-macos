@@ -63,7 +63,25 @@ struct MenuContentView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
             }
-            .frame(minHeight: 480, maxHeight: 720)
+            // Default popover height bumped from 480 → 640 so the
+            // Streak panel + Rollup tiles + Activity heatmap all fit
+            // on screen without forcing the user to discover the
+            // scroll. Cap stays at 720 so the panel never grows
+            // taller than a typical sub-1080p display can render
+            // cleanly above the dock.
+            .frame(minHeight: 640, maxHeight: 720)
+            // Soft bottom fade so there's a visible "more below"
+            // affordance whenever the content overflows. Pure
+            // overlay — doesn't capture scroll events.
+            .overlay(alignment: .bottom) {
+                LinearGradient(
+                    colors: [Color.clear, Color(NSColor.windowBackgroundColor).opacity(0.7)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 18)
+                .allowsHitTesting(false)
+            }
         }
     }
 }
