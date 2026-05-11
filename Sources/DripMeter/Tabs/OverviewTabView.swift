@@ -26,7 +26,14 @@ struct OverviewTabView: View {
                 )
             }
 
-            if let history = store.report.history, history.count >= 2 {
+            // Rollup renders as soon as DRIP has *any* history bucket.
+            // The previous `count >= 2` gate meant a freshly-installed
+            // user never saw the panel and assumed it didn't exist.
+            // With one day's data the tiles show today's value as both
+            // total and peak, avg/day as `tokensSaved / 7`, active 1/7
+            // — still informative, and the panel grows naturally as
+            // more days roll in.
+            if let history = store.report.history, !history.isEmpty {
                 Divider()
                 PeriodStatsView(history: history)
             }
