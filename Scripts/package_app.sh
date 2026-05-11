@@ -76,6 +76,20 @@ cp "${INFO_PLIST_SRC}" "${INFO_PLIST_DST}"
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${BUILD_NUMBER}" "${INFO_PLIST_DST}"
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier ${BUNDLE_ID}" "${INFO_PLIST_DST}"
 
+# macOS 14+ stamps `com.apple.provenance` (and sometimes `quarantine`)
+# on files copied via `cp` from the Downloads/Desktop tree. codesign
+# rejects those with "resource fork, Finder information, or similar
+# detritus not allowed". `ditto --norsrc --noextattr --noacl` is the
+# only reliable strip — `xattr -cr` leaves provenance behind.
+CLEAN_PATH="${APP_PATH}.clean.$$"
+ditto --norsrc --noextattr --noacl "${APP_PATH}" "${CLEAN_PATH}"
+if command -v trash >/dev/null 2>&1; then
+    trash "${APP_PATH}"
+else
+    mv "${APP_PATH}" "${APP_PATH}.predetritus.$$"
+fi
+mv "${CLEAN_PATH}" "${APP_PATH}"
+
 echo "→ Code signing (adhoc)"
 codesign --force --deep --sign "${DRIPMETER_SIGNING:-"-"}" "${APP_PATH}"
 
