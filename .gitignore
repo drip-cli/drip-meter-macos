@@ -1,0 +1,25 @@
+# Swift / SPM
+.build/
+.swiftpm/
+Package.resolved
+*.xcodeproj
+DerivedData/
+*.xcworkspace
+
+# macOS
+.DS_Store
+
+# Build output
+build/
+DripMeter.app/
+*.dmg
+*.zip
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Local secrets / env
+.env
+.env.local

@@ -1,0 +1,24 @@
+disabled_rules:
+  - todo
+  - line_length
+  - identifier_name
+  - type_name
+  - nesting
+  - function_body_length
+  - file_length
+  - type_body_length
+  - cyclomatic_complexity
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - implicit_return
+  - sorted_imports
+
+excluded:
+  - .build
+  - .swiftpm
+  - DerivedData
+  - Tests
+
+reporter: "xcode"
