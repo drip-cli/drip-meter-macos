@@ -36,30 +36,35 @@ struct ActivityHeatmapView: View {
             }
 
             // Cell size is computed from the available width so the
-            // grid always fills the container. Previous version used
-            // fixed 9 px cells which left a lot of dead space on the
-            // right of the popover (and looked off-centre).
-            GeometryReader { proxy in
-                let spacing: CGFloat = 3
-                let columns = max(1, grid.weeks.count)
-                let cellSize = max(
-                    4,
-                    (proxy.size.width - CGFloat(columns - 1) * spacing) / CGFloat(columns)
-                )
-                HStack(alignment: .top, spacing: spacing) {
-                    ForEach(grid.weeks.indices, id: \.self) { weekIdx in
-                        VStack(spacing: spacing) {
-                            ForEach(grid.weeks[weekIdx].indices, id: \.self) { dayIdx in
-                                HeatCell(
-                                    cell: grid.weeks[weekIdx][dayIdx],
-                                    size: cellSize
-                                )
+            // grid always fills the container. Wrapped in a Color.clear
+            // with `.aspectRatio(weeks:7, .fit)` so the frame's HEIGHT
+            // is derived from its width — previous fixed-height frame
+            // clipped the 7 rows into ~5 rows worth of pixels and the
+            // overflow looked like a layout bug.
+            let columns = max(1, grid.weeks.count)
+            Color.clear
+                .aspectRatio(CGFloat(columns) / 7.0, contentMode: .fit)
+                .overlay {
+                    GeometryReader { proxy in
+                        let spacing: CGFloat = 3
+                        let cellSize = max(
+                            4,
+                            (proxy.size.width - CGFloat(columns - 1) * spacing) / CGFloat(columns)
+                        )
+                        HStack(alignment: .top, spacing: spacing) {
+                            ForEach(grid.weeks.indices, id: \.self) { weekIdx in
+                                VStack(spacing: spacing) {
+                                    ForEach(grid.weeks[weekIdx].indices, id: \.self) { dayIdx in
+                                        HeatCell(
+                                            cell: grid.weeks[weekIdx][dayIdx],
+                                            size: cellSize
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
-            .frame(height: heatmapHeight)
 
             HStack(spacing: 8) {
                 Text("less")
@@ -84,12 +89,6 @@ struct ActivityHeatmapView: View {
         }
     }
 
-    /// Approximate height the GeometryReader needs to reserve so the
-    /// grid renders before layout actually measures the width. We
-    /// shoot for a typical popover width (about 348 px of content
-    /// after the 16 px padding either side), giving ~22 px cell on a
-    /// 13-week grid → 7 × (22 + 3) - 3 ≈ 172, capped at 130 for sanity.
-    private var heatmapHeight: CGFloat { 130 }
 
     fileprivate struct Cell {
         let date: Date
