@@ -56,42 +56,6 @@ struct MeterReportTests {
         #expect(report.history?.first?.day == "2026-05-01")
     }
 
-    @Test("Decodes the savings_breakdown payload introduced with the meter rename")
-    func decodesSavingsBreakdown() throws {
-        let json = """
-        {
-          "scope": "lifetime",
-          "session_id": "lifetime",
-          "started_at": 0,
-          "elapsed_secs": 0,
-          "files_tracked": 0,
-          "total_reads": 0,
-          "files_edited": 0,
-          "total_edits": 0,
-          "tokens_full": 0,
-          "tokens_sent": 0,
-          "tokens_saved": 0,
-          "savings_breakdown": {
-            "file_reads": { "tokens_saved": 102800 },
-            "bash_commands": { "tokens_saved": 5400, "commands_intercepted": 12 },
-            "total": { "tokens_saved": 108200 }
-          },
-          "reduction_pct": 0,
-          "dollars_saved": 0,
-          "price_per_mtok": 3.0,
-          "co2_g_saved": 0,
-          "co2_g_per_ktok": 0.4,
-          "top": []
-        }
-        """
-        let report = try JSONDecoder().decode(MeterReport.self, from: Data(json.utf8))
-        let breakdown = try #require(report.savingsBreakdown)
-        #expect(breakdown.fileReads.tokensSaved == 102_800)
-        #expect(breakdown.bashCommands.tokensSaved == 5_400)
-        #expect(breakdown.bashCommands.commandsIntercepted == 12)
-        #expect(breakdown.total.tokensSaved == 108_200)
-    }
-
     @Test("Tolerates a missing history field")
     func toleratesMissingHistory() throws {
         let json = """

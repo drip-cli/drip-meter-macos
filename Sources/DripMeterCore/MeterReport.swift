@@ -20,7 +20,6 @@ public struct MeterReport: Codable, Sendable, Equatable {
     public let tokensFull: Int64
     public let tokensSent: Int64
     public let tokensSaved: Int64
-    public let savingsBreakdown: SavingsBreakdown?
     public let reductionPct: Int
     public let dollarsSaved: Double
     public let pricePerMtok: Double
@@ -43,7 +42,6 @@ public struct MeterReport: Codable, Sendable, Equatable {
         tokensFull: Int64,
         tokensSent: Int64,
         tokensSaved: Int64,
-        savingsBreakdown: SavingsBreakdown? = nil,
         reductionPct: Int,
         dollarsSaved: Double,
         pricePerMtok: Double,
@@ -65,7 +63,6 @@ public struct MeterReport: Codable, Sendable, Equatable {
         self.tokensFull = tokensFull
         self.tokensSent = tokensSent
         self.tokensSaved = tokensSaved
-        self.savingsBreakdown = savingsBreakdown
         self.reductionPct = reductionPct
         self.dollarsSaved = dollarsSaved
         self.pricePerMtok = pricePerMtok
@@ -130,45 +127,6 @@ public struct MeterReport: Codable, Sendable, Equatable {
             case tokensSent = "tokens_sent"
             case tokensSaved = "tokens_saved"
             case reductionPct = "reduction_pct"
-        }
-    }
-
-    /// Split of where the savings came from. Introduced alongside the
-    /// `gain → meter` rename: DRIP now reports file-read savings and
-    /// bash-pipeline savings separately so the UI can attribute the win
-    /// to the right source.
-    public struct SavingsBreakdown: Codable, Sendable, Equatable {
-        public let fileReads: FileReads
-        public let bashCommands: BashCommands
-        public let total: Total
-
-        public struct FileReads: Codable, Sendable, Equatable {
-            public let tokensSaved: Int64
-            enum CodingKeys: String, CodingKey {
-                case tokensSaved = "tokens_saved"
-            }
-        }
-
-        public struct BashCommands: Codable, Sendable, Equatable {
-            public let tokensSaved: Int64
-            public let commandsIntercepted: Int64
-            enum CodingKeys: String, CodingKey {
-                case tokensSaved = "tokens_saved"
-                case commandsIntercepted = "commands_intercepted"
-            }
-        }
-
-        public struct Total: Codable, Sendable, Equatable {
-            public let tokensSaved: Int64
-            enum CodingKeys: String, CodingKey {
-                case tokensSaved = "tokens_saved"
-            }
-        }
-
-        enum CodingKeys: String, CodingKey {
-            case fileReads = "file_reads"
-            case bashCommands = "bash_commands"
-            case total
         }
     }
 
@@ -254,7 +212,6 @@ public struct MeterReport: Codable, Sendable, Equatable {
         case tokensFull = "tokens_full"
         case tokensSent = "tokens_sent"
         case tokensSaved = "tokens_saved"
-        case savingsBreakdown = "savings_breakdown"
         case reductionPct = "reduction_pct"
         case dollarsSaved = "dollars_saved"
         case pricePerMtok = "price_per_mtok"
@@ -280,7 +237,6 @@ public struct MeterReport: Codable, Sendable, Equatable {
         tokensFull: 0,
         tokensSent: 0,
         tokensSaved: 0,
-        savingsBreakdown: nil,
         reductionPct: 0,
         dollarsSaved: 0,
         pricePerMtok: 3.0,

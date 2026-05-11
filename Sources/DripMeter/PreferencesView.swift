@@ -550,7 +550,7 @@ private struct AdvancedPane: View {
                     runAction(.resetAll)
                 }
             } message: {
-                Text("This deletes every session, baseline, pipeline cache row, file-registry entry, and lifetime counter. Your DRIP install itself stays put — just the captured state goes.")
+                Text("This deletes every session, baseline, file-registry entry, and lifetime counter. Your DRIP install itself stays put — just the captured state goes.")
             }
 
             PaneSection("Status") {

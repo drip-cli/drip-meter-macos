@@ -2,7 +2,7 @@ import DripMeterCore
 import SwiftUI
 
 /// Overview tab. Owns the big "X tokens saved" hero card plus several
-/// subordinate panels. Order matters: hero → daily target → bash split →
+/// subordinate panels. Order matters: hero → daily target → compaction →
 /// per-agent → cost projection → top files → sparkline. Each one renders
 /// only when there's something meaningful to show.
 struct OverviewTabView: View {
@@ -20,12 +20,6 @@ struct OverviewTabView: View {
                     target: settings.dailyTokenTarget,
                     streak: store.streakDays
                 )
-            }
-
-            if let breakdown = store.report.savingsBreakdown,
-               breakdown.bashCommands.commandsIntercepted > 0 || breakdown.fileReads.tokensSaved > 0 {
-                Divider()
-                BashBreakdownView(breakdown: breakdown)
             }
 
             if let compaction = store.report.compaction,

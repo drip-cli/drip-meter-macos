@@ -110,24 +110,6 @@
         "fr" : { "stringUnit" : { "state" : "translated", "value" : "Projection de coût" } }
       }
     },
-    "Where the savings come from" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Source des économies" } }
-      }
-    },
-    "File reads" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lectures de fichiers" } }
-      }
-    },
-    "Bash pipelines" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Pipelines bash" } }
-      }
-    },
     "Recent sessions" : {
       "extractionState" : "manual",
       "localizations" : {

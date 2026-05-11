@@ -16,10 +16,6 @@ public struct ReplayEvent: Identifiable, Sendable, Equatable {
         // window is byte-identical to the cached baseline.
         case partialUnchanged = "partial-unchanged"
         case delta
-        // A bash pipeline (cat | head, grep PAT file, etc.) that DRIP
-        // intercepted and either substituted with a slice or with the
-        // pipeline-unchanged sentinel.
-        case pipeline
         case fallback
         case deleted
         case passthrough
@@ -31,7 +27,6 @@ public struct ReplayEvent: Identifiable, Sendable, Equatable {
             case .unchanged: "Unchanged"
             case .partialUnchanged: "Window unchanged"
             case .delta: "Delta"
-            case .pipeline: "Pipeline"
             case .fallback: "Fallback"
             case .deleted: "Deleted"
             case .passthrough: "Passthrough"
@@ -45,7 +40,6 @@ public struct ReplayEvent: Identifiable, Sendable, Equatable {
             case .unchanged: "equal.circle"
             case .partialUnchanged: "equal.square"
             case .delta: "arrow.triangle.merge"
-            case .pipeline: "terminal"
             case .fallback: "arrow.uturn.backward"
             case .deleted: "trash"
             case .passthrough: "arrow.right"

@@ -99,7 +99,6 @@ private struct EventRow: View {
         case .first, .firstCompressed: .blue
         case .unchanged, .partialUnchanged: .secondary
         case .delta: DripPalette.green
-        case .pipeline: DripPalette.greenDark
         case .fallback: .orange
         case .deleted: .red
         case .passthrough: .gray
