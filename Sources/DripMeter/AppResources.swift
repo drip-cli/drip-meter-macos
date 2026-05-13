@@ -30,7 +30,7 @@ enum AppResources {
 
         let candidates: [URL] = [
             Bundle.main.resourceURL,
-            Bundle(for: AppResourcesBundleFinder.self).resourceURL,
+            Bundle(for: AppResourcesBundleFinder.self).resourceURL
         ]
         .compactMap { $0?.appendingPathComponent("\(bundleName).bundle") }
 
