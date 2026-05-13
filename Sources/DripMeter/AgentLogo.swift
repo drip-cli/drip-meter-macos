@@ -3,7 +3,7 @@ import DripMeterCore
 import SwiftUI
 
 /// Displays the official Anthropic / OpenAI / Google logos for each agent.
-/// SVGs ship in the SPM resource bundle; we load them via `Bundle.module`
+/// SVGs ship in the SPM resource bundle; we load them via `AppResources.bundle`
 /// because they live in the resource bundle's root, not in the asset catalog.
 struct AgentLogo: View {
     let agent: DripAgent
@@ -36,7 +36,7 @@ enum AgentLogoLoader {
         case .codex: "ProviderIcon-codex"
         case .gemini: "ProviderIcon-gemini"
         }
-        guard let url = Bundle.module.url(forResource: baseName, withExtension: "svg") else { return nil }
+        guard let url = AppResources.bundle.url(forResource: baseName, withExtension: "svg") else { return nil }
         return NSImage(contentsOf: url)
     }
 }
