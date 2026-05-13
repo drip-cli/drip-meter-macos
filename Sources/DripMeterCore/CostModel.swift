@@ -21,12 +21,16 @@ public struct CostModel: Identifiable, Hashable, Sendable, Codable {
     public static let gpt5 = CostModel(id: "gpt-5", displayName: "GPT-5 / Codex", pricePerMtok: 5.0)
     public static let gpt5Mini = CostModel(id: "gpt-5-mini", displayName: "GPT-5 Mini", pricePerMtok: 1.0)
     public static let gemini25Pro = CostModel(id: "gemini-2.5-pro", displayName: "Gemini 2.5 Pro", pricePerMtok: 7.0)
-    public static let gemini25Flash = CostModel(id: "gemini-2.5-flash", displayName: "Gemini 2.5 Flash", pricePerMtok: 0.30)
+    public static let gemini25Flash = CostModel(
+        id: "gemini-2.5-flash",
+        displayName: "Gemini 2.5 Flash",
+        pricePerMtok: 0.30
+    )
 
     public static let presets: [CostModel] = [
         .haiku45, .sonnet46, .opus47, .opus46,
         .gpt5Mini, .gpt5,
-        .gemini25Flash, .gemini25Pro,
+        .gemini25Flash, .gemini25Pro
     ]
 
     /// Project savings over a horizon based on observed `tokensSaved` and the
@@ -51,14 +55,16 @@ public enum ProjectionHorizon: String, CaseIterable, Identifiable, Sendable, Cod
     case month
     case year
 
-    public var id: String { rawValue }
+    public var id: String {
+        rawValue
+    }
 
     public var seconds: Int64 {
         switch self {
-        case .day: 86_400
-        case .week: 86_400 * 7
-        case .month: 86_400 * 30
-        case .year: 86_400 * 365
+        case .day: 86400
+        case .week: 86400 * 7
+        case .month: 86400 * 30
+        case .year: 86400 * 365
         }
     }
 

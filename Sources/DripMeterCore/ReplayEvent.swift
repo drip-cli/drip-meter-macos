@@ -59,13 +59,15 @@ public struct ReplayEvent: Identifiable, Sendable, Equatable {
     /// the in-popover Live view.
     public let isPostCompaction: Bool
 
-    public var tokensSaved: Int64 { max(0, tokensFull - tokensSent) }
+    public var tokensSaved: Int64 {
+        max(0, tokensFull - tokensSent)
+    }
 }
 
-extension DripDatabase {
+public extension DripDatabase {
     /// Last N read events, most recent first. Window is bounded by `since`
     /// (Unix seconds, e.g. `now - 300` for last 5 min).
-    public func fetchRecentEvents(since: Int64, limit: Int = 50) throws -> [ReplayEvent] {
+    func fetchRecentEvents(since: Int64, limit: Int = 50) throws -> [ReplayEvent] {
         guard exists else { return [] }
         let db = try DripDatabase.openReadOnly(at: url)
         defer { sqlite3_close_v2(db) }
@@ -124,7 +126,7 @@ extension DripDatabase {
 
     /// Top-N files across the lifetime registry. Lets the Files tab show many
     /// more rows than `drip meter --json`'s default top-10.
-    public func fetchTopFiles(limit: Int = 50) throws -> [MeterReport.PerFile] {
+    func fetchTopFiles(limit: Int = 50) throws -> [MeterReport.PerFile] {
         guard exists else { return [] }
         let db = try DripDatabase.openReadOnly(at: url)
         defer { sqlite3_close_v2(db) }

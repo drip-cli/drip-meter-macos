@@ -1,6 +1,6 @@
+@testable import DripMeterCore
 import Foundation
 import Testing
-@testable import DripMeterCore
 
 @Suite("MeterReport JSON decoding")
 struct MeterReportTests {
@@ -103,7 +103,7 @@ struct DripFormatterTests {
     func compactIntegerFormatter() {
         #expect(DripFormatter.compactInteger(0) == "0")
         #expect(DripFormatter.compactInteger(999) == "999")
-        #expect(DripFormatter.compactInteger(1_000) == "1K")
+        #expect(DripFormatter.compactInteger(1000) == "1K")
         #expect(DripFormatter.compactInteger(102_800).hasSuffix("K"))
         #expect(DripFormatter.compactInteger(2_500_000) == "2.5M")
     }
@@ -126,11 +126,11 @@ struct AgentBreakdownTests {
             agent: .claude,
             sessions: 3,
             filesTracked: 12,
-            tokensFull: 10_000,
-            tokensSent: 2_500,
+            tokensFull: 10000,
+            tokensSent: 2500,
             lastActiveAt: nil
         )
-        #expect(row.tokensSaved == 7_500)
+        #expect(row.tokensSaved == 7500)
         #expect(row.reductionPct == 75)
         #expect(row.hasActivity)
     }

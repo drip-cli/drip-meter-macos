@@ -98,7 +98,9 @@ public struct MeterReport: Codable, Sendable, Equatable {
             self.reductionPct = reductionPct
         }
 
-        public var id: String { file }
+        public var id: String {
+            file
+        }
 
         enum CodingKeys: String, CodingKey {
             case file
@@ -134,7 +136,9 @@ public struct MeterReport: Codable, Sendable, Equatable {
             self.reductionPct = reductionPct
         }
 
-        public var id: String { day }
+        public var id: String {
+            day
+        }
 
         enum CodingKeys: String, CodingKey {
             case day
@@ -196,7 +200,9 @@ public struct MeterReport: Codable, Sendable, Equatable {
         public let compactableRows: Int64
         public let compactableBytes: Int64
 
-        public var totalBytes: Int64 { dbSizeBytes + cacheSizeBytes }
+        public var totalBytes: Int64 {
+            dbSizeBytes + cacheSizeBytes
+        }
 
         enum CodingKeys: String, CodingKey {
             case inlineMaxBytes = "inline_max_bytes"

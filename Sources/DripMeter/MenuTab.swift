@@ -9,7 +9,9 @@ enum MenuTab: String, CaseIterable, Identifiable {
     case files
     case live
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var displayName: String {
         switch self {

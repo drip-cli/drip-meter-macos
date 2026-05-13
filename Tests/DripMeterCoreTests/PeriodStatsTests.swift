@@ -1,6 +1,6 @@
+@testable import DripMeterCore
 import Foundation
 import Testing
-@testable import DripMeterCore
 
 @Suite("PeriodStats rollup")
 struct PeriodStatsTests {
@@ -31,28 +31,28 @@ struct PeriodStatsTests {
     @Test("Window larger than history just sums what's there")
     func windowLargerThanHistory() {
         let buckets = [
-            bucket("2026-05-01", full: 1_000, sent: 200, reads: 10),
-            bucket("2026-05-02", full: 4_000, sent: 1_000, reads: 30),
+            bucket("2026-05-01", full: 1000, sent: 200, reads: 10),
+            bucket("2026-05-02", full: 4000, sent: 1000, reads: 30)
         ]
         let rolled = buckets.rollup(windowDays: 30, label: "")
-        #expect(rolled.tokensSaved == 3_800)
+        #expect(rolled.tokensSaved == 3800)
         #expect(rolled.activeDays == 2)
         // Average is over the **full** 30-day window, not the 2 days
         // present — `3800 / 30 = 126.67 → 127`.
         #expect(rolled.avgPerDay == 127)
-        #expect(rolled.avgPerActiveDay == 1_900)
+        #expect(rolled.avgPerActiveDay == 1900)
     }
 
     @Test("Peak day picks the bucket with max tokensSaved")
     func peakDay() {
         let buckets = [
-            bucket("2026-05-01", full: 1_000, sent: 200, reads: 10),
-            bucket("2026-05-02", full: 9_000, sent: 1_000, reads: 50),
-            bucket("2026-05-03", full: 2_000, sent: 200, reads: 20),
+            bucket("2026-05-01", full: 1000, sent: 200, reads: 10),
+            bucket("2026-05-02", full: 9000, sent: 1000, reads: 50),
+            bucket("2026-05-03", full: 2000, sent: 200, reads: 20)
         ]
         let rolled = buckets.rollup(windowDays: 7, label: "")
         #expect(rolled.peakDay?.day == "2026-05-02")
-        #expect(rolled.peakDay?.tokensSaved == 8_000)
+        #expect(rolled.peakDay?.tokensSaved == 8000)
     }
 
     @Test("Zero-read buckets don't count as active even if tokensSaved is non-zero")
@@ -60,19 +60,19 @@ struct PeriodStatsTests {
         // Edge case: a phantom bucket with savings but no reads (shouldn't
         // happen in practice but the rollup contract is "active = reads > 0").
         let buckets = [
-            bucket("2026-05-01", full: 1_000, sent: 200, reads: 0),
-            bucket("2026-05-02", full: 4_000, sent: 1_000, reads: 30),
+            bucket("2026-05-01", full: 1000, sent: 200, reads: 0),
+            bucket("2026-05-02", full: 4000, sent: 1000, reads: 30)
         ]
         let rolled = buckets.rollup(windowDays: 7, label: "")
         #expect(rolled.activeDays == 1)
-        #expect(rolled.tokensSaved == 3_800)
+        #expect(rolled.tokensSaved == 3800)
     }
 
     @Test("Reduction percentage matches the headline formula")
     func reductionPct() {
         let buckets = [
-            bucket("2026-05-01", full: 10_000, sent: 2_000, reads: 50),
-            bucket("2026-05-02", full: 10_000, sent: 2_000, reads: 50),
+            bucket("2026-05-01", full: 10000, sent: 2000, reads: 50),
+            bucket("2026-05-02", full: 10000, sent: 2000, reads: 50)
         ]
         let rolled = buckets.rollup(windowDays: 7, label: "")
         #expect(rolled.reductionPct == 80)
@@ -87,14 +87,14 @@ struct UsageReportTests {
             scope: .lifetime,
             sessionId: "lifetime",
             startedAt: 0,
-            elapsedSecs: 86_400,
+            elapsedSecs: 86400,
             filesTracked: 12,
             totalReads: 200,
             filesEdited: 4,
             totalEdits: 20,
             tokensFull: 100_000,
-            tokensSent: 20_000,
-            tokensSaved: 80_000,
+            tokensSent: 20000,
+            tokensSaved: 80000,
             reductionPct: 80,
             dollarsSaved: 0.24,
             pricePerMtok: 3.0,
@@ -102,14 +102,35 @@ struct UsageReportTests {
             co2GPerKtok: 0.4,
             top: [],
             history: [
-                MeterReport.DayBucket(day: "2026-05-10", reads: 50, tokensFull: 20_000, tokensSent: 4_000, tokensSaved: 16_000, reductionPct: 80),
-                MeterReport.DayBucket(day: "2026-05-11", reads: 100, tokensFull: 50_000, tokensSent: 10_000, tokensSaved: 40_000, reductionPct: 80),
+                MeterReport.DayBucket(
+                    day: "2026-05-10",
+                    reads: 50,
+                    tokensFull: 20000,
+                    tokensSent: 4000,
+                    tokensSaved: 16000,
+                    reductionPct: 80
+                ),
+                MeterReport.DayBucket(
+                    day: "2026-05-11",
+                    reads: 100,
+                    tokensFull: 50000,
+                    tokensSent: 10000,
+                    tokensSaved: 40000,
+                    reductionPct: 80
+                )
             ]
         )
         let input = UsageReport.Input(
             report: report,
             agents: [
-                AgentBreakdown(agent: .claude, sessions: 2, filesTracked: 12, tokensFull: 100_000, tokensSent: 20_000, lastActiveAt: nil),
+                AgentBreakdown(
+                    agent: .claude,
+                    sessions: 2,
+                    filesTracked: 12,
+                    tokensFull: 100_000,
+                    tokensSent: 20000,
+                    lastActiveAt: nil
+                )
             ],
             topFiles: [],
             currentStreak: 5,

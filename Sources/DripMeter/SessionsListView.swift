@@ -93,7 +93,9 @@ private struct SessionRowView: View {
         .background(
             Capsule().fill(Color.orange.opacity(0.14))
         )
-        .help("Context was compacted \(session.compactionCount) time\(session.compactionCount == 1 ? "" : "s") in this session — DRIP had to rebuild some baselines.")
+        .help(
+            "Context was compacted \(session.compactionCount) time\(session.compactionCount == 1 ? "" : "s") in this session — DRIP had to rebuild some baselines."
+        )
     }
 
     @ViewBuilder

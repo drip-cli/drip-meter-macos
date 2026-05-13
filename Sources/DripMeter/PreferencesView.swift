@@ -12,7 +12,9 @@ enum PreferencesSection: String, CaseIterable, Identifiable, Hashable {
     case advanced
     case about
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var title: String {
         switch self {
@@ -260,12 +262,12 @@ private struct AppearancePane: View {
                                 set: { settings.dailyTokenTarget = Int64($0) }
                             ),
                             in: 0 ... 200_000,
-                            step: 5_000
+                            step: 5000
                         )
                         .frame(width: 140)
                         Text(settings.dailyTokenTarget == 0
-                             ? "off"
-                             : DripFormatter.compactInteger(settings.dailyTokenTarget))
+                            ? "off"
+                            : DripFormatter.compactInteger(settings.dailyTokenTarget))
                             .font(.callout.monospacedDigit())
                             .foregroundStyle(.secondary)
                             .frame(width: 56, alignment: .trailing)
@@ -322,27 +324,27 @@ private struct AgentsPane: View {
 
     private func installSummary(_ install: AgentInstallStatus) -> String {
         switch install.state {
-        case .wired: return "Wired"
-        case .configFoundNoDrip: return "Config found, drip not registered"
-        case .notInstalled: return "Not installed"
-        case .unknown: return "Unknown"
+        case .wired: "Wired"
+        case .configFoundNoDrip: "Config found, drip not registered"
+        case .notInstalled: "Not installed"
+        case .unknown: "Unknown"
         }
     }
 
     private func installSymbol(_ install: AgentInstallStatus) -> String {
         switch install.state {
-        case .wired: return "checkmark.seal.fill"
-        case .configFoundNoDrip: return "exclamationmark.circle.fill"
-        case .notInstalled: return "minus.circle"
-        case .unknown: return "questionmark.circle"
+        case .wired: "checkmark.seal.fill"
+        case .configFoundNoDrip: "exclamationmark.circle.fill"
+        case .notInstalled: "minus.circle"
+        case .unknown: "questionmark.circle"
         }
     }
 
     private func installColor(_ install: AgentInstallStatus) -> Color {
         switch install.state {
-        case .wired: return .green
-        case .configFoundNoDrip: return .orange
-        case .notInstalled, .unknown: return .secondary
+        case .wired: .green
+        case .configFoundNoDrip: .orange
+        case .notInstalled, .unknown: .secondary
         }
     }
 }
@@ -425,7 +427,10 @@ private struct NotificationsPane: View {
                 }
             }
             PaneSection("Thresholds") {
-                ForEach(Array(Milestone.allCases.sorted { $0.rank < $1.rank }.enumerated()), id: \.element) { index, milestone in
+                ForEach(
+                    Array(Milestone.allCases.sorted { $0.rank < $1.rank }.enumerated()),
+                    id: \.element
+                ) { index, milestone in
                     if index > 0 { Divider() }
                     PaneRow(milestone.displayName) {
                         EmptyView()
@@ -570,7 +575,9 @@ private struct AdvancedPane: View {
                     runAction(.resetAll)
                 }
             } message: {
-                Text("This deletes every session, baseline, file-registry entry, and lifetime counter. Your DRIP install itself stays put — just the captured state goes.")
+                Text(
+                    "This deletes every session, baseline, file-registry entry, and lifetime counter. Your DRIP install itself stays put — just the captured state goes."
+                )
             }
 
             PaneSection("Status") {
@@ -648,10 +655,10 @@ private struct AdvancedPane: View {
 
     private var installSummary: String {
         switch store.installStatus {
-        case .ready(let version): return version
-        case .binaryMissing: return "drip binary not found"
-        case .databaseMissing: return "binary OK, no database yet"
-        case .probing: return "loading…"
+        case let .ready(version): version
+        case .binaryMissing: "drip binary not found"
+        case .databaseMissing: "binary OK, no database yet"
+        case .probing: "loading…"
         }
     }
 }

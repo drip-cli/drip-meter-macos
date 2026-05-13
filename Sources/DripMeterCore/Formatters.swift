@@ -23,8 +23,8 @@ public enum DripFormatter {
         if absValue >= 1_000_000 {
             return (formatter.string(from: NSNumber(value: Double(value) / 1_000_000)) ?? "0") + "M"
         }
-        if absValue >= 1_000 {
-            return (formatter.string(from: NSNumber(value: Double(value) / 1_000)) ?? "0") + "K"
+        if absValue >= 1000 {
+            return (formatter.string(from: NSNumber(value: Double(value) / 1000)) ?? "0") + "K"
         }
         return "\(value)"
     }
@@ -45,8 +45,8 @@ public enum DripFormatter {
     }
 
     public static func grams(_ value: Double) -> String {
-        if value >= 1_000 {
-            return String(format: "%.1f kg", value / 1_000)
+        if value >= 1000 {
+            return String(format: "%.1f kg", value / 1000)
         }
         return String(format: "%.0f g", value)
     }
@@ -58,9 +58,9 @@ public enum DripFormatter {
         let then = Date(timeIntervalSince1970: TimeInterval(seconds))
         let delta = Int(now.timeIntervalSince(then))
         if delta < 60 { return "just now" }
-        if delta < 3_600 { return "\(delta / 60)m ago" }
-        if delta < 86_400 { return "\(delta / 3_600)h ago" }
-        return "\(delta / 86_400)d ago"
+        if delta < 3600 { return "\(delta / 60)m ago" }
+        if delta < 86400 { return "\(delta / 3600)h ago" }
+        return "\(delta / 86400)d ago"
     }
 
     /// Truncate a long file path with a leading ellipsis so the tail stays

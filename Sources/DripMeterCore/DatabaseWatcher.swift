@@ -59,12 +59,12 @@ public final class DatabaseWatcher: @unchecked Sendable {
         )
         source.setEventHandler { [weak self] in
             guard let self else { return }
-            self.onChange()
+            onChange()
             // SQLite often atomically renames over the file. If the inode is
             // gone, re-arm on the new one after a short coalescing delay.
             let mask = source.data
             if mask.contains(.delete) || mask.contains(.rename) {
-                self.scheduleRearm(after: 0.5)
+                scheduleRearm(after: 0.5)
             }
         }
         source.setCancelHandler { [fd] in
@@ -72,7 +72,7 @@ public final class DatabaseWatcher: @unchecked Sendable {
         }
         source.resume()
         self.source = source
-        self.fileDescriptor = fd
+        fileDescriptor = fd
     }
 
     private func scheduleRearm(after seconds: TimeInterval) {

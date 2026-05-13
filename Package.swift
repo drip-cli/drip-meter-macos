@@ -4,11 +4,11 @@ import PackageDescription
 let package = Package(
     name: "DripMeter",
     platforms: [
-        .macOS(.v14),
+        .macOS(.v14)
     ],
     products: [
         .executable(name: "DripMeter", targets: ["DripMeter"]),
-        .library(name: "DripMeterCore", targets: ["DripMeterCore"]),
+        .library(name: "DripMeterCore", targets: ["DripMeterCore"])
     ],
     dependencies: [],
     targets: [
@@ -16,7 +16,7 @@ let package = Package(
             name: "DripMeterCore",
             path: "Sources/DripMeterCore",
             swiftSettings: [
-                .enableUpcomingFeature("StrictConcurrency"),
+                .enableUpcomingFeature("StrictConcurrency")
             ]
         ),
         .executableTarget(
@@ -24,16 +24,16 @@ let package = Package(
             dependencies: ["DripMeterCore"],
             path: "Sources/DripMeter",
             resources: [
-                .process("Resources"),
+                .process("Resources")
             ],
             swiftSettings: [
-                .enableUpcomingFeature("StrictConcurrency"),
+                .enableUpcomingFeature("StrictConcurrency")
             ]
         ),
         .testTarget(
             name: "DripMeterCoreTests",
             dependencies: ["DripMeterCore"],
             path: "Tests/DripMeterCoreTests"
-        ),
+        )
     ]
 )

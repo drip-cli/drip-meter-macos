@@ -109,7 +109,7 @@ public struct DripDatabase: Sendable {
     /// `query_only` pragma + `temp_store = MEMORY` combo lets SQLite
     /// use a heap-only temp store while still refusing any write SQL
     /// we accidentally send.
-    internal static func openReadOnly(at url: URL) throws -> OpaquePointer {
+    static func openReadOnly(at url: URL) throws -> OpaquePointer {
         var db: OpaquePointer?
         let flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX
         let openResult = sqlite3_open_v2(url.path, &db, flags, nil)
@@ -120,7 +120,13 @@ public struct DripDatabase: Sendable {
         // Application-level read-only lock + heap temp store. Both are
         // best-effort — if the pragma SQL itself errors we still let
         // the caller continue; the worst case is a noisy log entry.
-        sqlite3_exec(db, "PRAGMA query_only = 1; PRAGMA temp_store = MEMORY; PRAGMA busy_timeout = 1000;", nil, nil, nil)
+        sqlite3_exec(
+            db,
+            "PRAGMA query_only = 1; PRAGMA temp_store = MEMORY; PRAGMA busy_timeout = 1000;",
+            nil,
+            nil,
+            nil
+        )
         return db
     }
 

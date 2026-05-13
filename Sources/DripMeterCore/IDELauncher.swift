@@ -17,7 +17,9 @@ public enum IDEPreference: String, CaseIterable, Identifiable, Sendable, Codable
     case textmate
     case terminal
 
-    public var id: String { rawValue }
+    public var id: String {
+        rawValue
+    }
 
     public var displayName: String {
         switch self {
