@@ -26,7 +26,7 @@ struct BrandingLogoView: View {
 
     private static func bundledLogo() -> NSImage? {
         for ext in ["png", "pdf"] {
-            if let url = Bundle.module.url(forResource: "BrandingLogo", withExtension: ext),
+            if let url = AppResources.bundle.url(forResource: "BrandingLogo", withExtension: ext),
                let image = NSImage(contentsOf: url)
             {
                 return image

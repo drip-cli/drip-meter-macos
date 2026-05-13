@@ -92,7 +92,7 @@ private struct MenuBarLabel: View {
 enum MenuBarTemplateLoader {
     static func image() -> NSImage? {
         for ext in ["pdf", "png"] {
-            if let url = Bundle.module.url(forResource: "MenuBarIcon", withExtension: ext),
+            if let url = AppResources.bundle.url(forResource: "MenuBarIcon", withExtension: ext),
                let image = NSImage(contentsOf: url)
             {
                 image.size = NSSize(width: 18, height: 18)
