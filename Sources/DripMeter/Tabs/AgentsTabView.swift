@@ -84,7 +84,6 @@ private struct AgentDetailCard: View {
         .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 10))
     }
 
-    @ViewBuilder
     private func wireUpRow(install: AgentInstallStatus) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(install.detail ?? "Not yet wired with `drip init`")
@@ -154,11 +153,10 @@ private struct AgentDetailCard: View {
     }
 
     private func runInit() {
-        let action: DripQuickAction
-        switch breakdown.agent {
-        case .claude: action = .initClaude
-        case .codex: action = .initCodex
-        case .gemini: action = .initGemini
+        let action: DripQuickAction = switch breakdown.agent {
+        case .claude: .initClaude
+        case .codex: .initCodex
+        case .gemini: .initGemini
         }
         isWiring = true
         wireResult = nil

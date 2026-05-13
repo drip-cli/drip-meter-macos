@@ -106,7 +106,7 @@ private struct EmptyFilesView: View {
                 commands: [
                     "drip init -g                    # Claude Code",
                     "drip init --agent codex         # Codex CLI",
-                    "drip init -g --agent gemini     # Gemini CLI",
+                    "drip init -g --agent gemini     # Gemini CLI"
                 ]
             )
         } else {

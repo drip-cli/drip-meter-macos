@@ -28,8 +28,10 @@ struct EmptyStateView: View {
                             .font(.system(.caption, design: .monospaced))
                             .padding(.vertical, 4)
                             .padding(.horizontal, 8)
-                            .background(Color.primary.opacity(0.06),
-                                        in: RoundedRectangle(cornerRadius: 4))
+                            .background(
+                                Color.primary.opacity(0.06),
+                                in: RoundedRectangle(cornerRadius: 4)
+                            )
                             .textSelection(.enabled)
                     }
                 }

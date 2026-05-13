@@ -45,8 +45,7 @@ public actor DripCLI {
         let payload = try await run(["meter", "--history", "--json"])
         do {
             let data = Data(payload.utf8)
-            let report = try JSONDecoder().decode(MeterReport.self, from: data)
-            return report
+            return try JSONDecoder().decode(MeterReport.self, from: data)
         } catch {
             logger.error("Failed to decode meter --json: \(error.localizedDescription, privacy: .public)")
             throw DripCLIError.decodeFailed(underlying: error, payload: payload)

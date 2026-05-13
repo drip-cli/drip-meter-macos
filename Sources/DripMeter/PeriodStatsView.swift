@@ -10,9 +10,18 @@ struct PeriodStatsView: View {
         case week
         case month
 
-        var id: String { rawValue }
-        var label: String { self == .week ? "7 days" : "30 days" }
-        var windowDays: Int { self == .week ? 7 : 30 }
+        var id: String {
+            rawValue
+        }
+
+        var label: String {
+            self == .week ? "7 days" : "30 days"
+        }
+
+        var windowDays: Int {
+            self == .week ? 7 : 30
+        }
+
         var displayLabel: String {
             self == .week ? "This week" : "Last 30 days"
         }
@@ -36,9 +45,22 @@ struct PeriodStatsView: View {
             // Four-up KPI tile row. Each tile shows a metric label + a
             // monospaced number so columns align across the row.
             HStack(spacing: 8) {
-                KPITile(label: "Saved", value: DripFormatter.compactInteger(stats.tokensSaved), accent: DripPalette.green)
-                KPITile(label: "Avg / day", value: DripFormatter.compactInteger(stats.avgPerDay), accent: DripPalette.greenDark)
-                KPITile(label: "Peak", value: DripFormatter.compactInteger(stats.peakDay?.tokensSaved ?? 0), accent: .orange, sub: peakDayLabel(stats.peakDay))
+                KPITile(
+                    label: "Saved",
+                    value: DripFormatter.compactInteger(stats.tokensSaved),
+                    accent: DripPalette.green
+                )
+                KPITile(
+                    label: "Avg / day",
+                    value: DripFormatter.compactInteger(stats.avgPerDay),
+                    accent: DripPalette.greenDark
+                )
+                KPITile(
+                    label: "Peak",
+                    value: DripFormatter.compactInteger(stats.peakDay?.tokensSaved ?? 0),
+                    accent: .orange,
+                    sub: peakDayLabel(stats.peakDay)
+                )
                 KPITile(label: "Active", value: "\(stats.activeDays)/\(stats.windowDays)", accent: .blue, sub: "days")
             }
 
@@ -55,8 +77,10 @@ struct PeriodStatsView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.down.right")
                         .font(.caption2)
-                    Text("\(stats.reductionPct)% reduction · \(DripFormatter.compactInteger(stats.tokensFull)) → \(DripFormatter.compactInteger(stats.tokensSent))")
-                        .font(.caption2)
+                    Text(
+                        "\(stats.reductionPct)% reduction · \(DripFormatter.compactInteger(stats.tokensFull)) → \(DripFormatter.compactInteger(stats.tokensSent))"
+                    )
+                    .font(.caption2)
                 }
                 .foregroundStyle(.tertiary)
             }
@@ -90,7 +114,9 @@ struct PeriodStatsView: View {
         calendar.timeZone = TimeZone(identifier: "UTC") ?? .current
 
         var byDay: [String: MeterReport.DayBucket] = [:]
-        for bucket in buckets { byDay[bucket.day] = bucket }
+        for bucket in buckets {
+            byDay[bucket.day] = bucket
+        }
 
         let today = Date()
         return (0 ..< windowDays).reversed().map { offset in
@@ -217,11 +243,13 @@ private struct MiniBars: View {
                     ? AnyShapeStyle(LinearGradient(
                         colors: [.orange, .orange.opacity(0.6)],
                         startPoint: .top,
-                        endPoint: .bottom))
+                        endPoint: .bottom
+                    ))
                     : AnyShapeStyle(LinearGradient(
                         colors: [DripPalette.green, DripPalette.greenDark.opacity(0.85)],
                         startPoint: .top,
-                        endPoint: .bottom))
+                        endPoint: .bottom
+                    ))
             )
             .cornerRadius(2)
         }

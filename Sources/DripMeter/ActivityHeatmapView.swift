@@ -81,7 +81,6 @@ struct ActivityHeatmapView: View {
         }
     }
 
-
     fileprivate struct Cell {
         let date: Date
         let label: String
@@ -108,12 +107,14 @@ struct ActivityHeatmapView: View {
         dayFormatter.dateFormat = "MMM d"
 
         var byDay: [String: MeterReport.DayBucket] = [:]
-        for bucket in history { byDay[bucket.day] = bucket }
+        for bucket in history {
+            byDay[bucket.day] = bucket
+        }
 
         // Bucket boundaries (tokensSaved) — log-ish so 1K -> level 1, 10K
         // -> level 2, 50K -> level 3, 200K+ -> level 4. Picked from a few
         // weeks of usage; tune as we see real-world variance.
-        let bucketBoundaries: [Int64] = [1, 5_000, 25_000, 100_000]
+        let bucketBoundaries: [Int64] = [1, 5000, 25000, 100_000]
 
         // Walk backwards from today (inclusive) for `totalDays` days,
         // then pre-pad to start the first column on Monday so the grid
@@ -184,7 +185,7 @@ private struct HeatCell: View {
             .overlay(
                 cell.isToday
                     ? RoundedRectangle(cornerRadius: 3.5)
-                        .stroke(DripPalette.green, lineWidth: 1)
+                    .stroke(DripPalette.green, lineWidth: 1)
                     : nil
             )
             .help(cell.isPlaceholder ? "" : "\(cell.label) · \(DripFormatter.compactInteger(cell.tokensSaved)) saved")

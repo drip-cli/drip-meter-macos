@@ -75,7 +75,9 @@ public struct AgentQuotaSnapshot: Identifiable, Sendable, Equatable {
     /// next to the progress bar.
     public let label: String?
 
-    public var id: DripAgent { agent }
+    public var id: DripAgent {
+        agent
+    }
 
     public var isStale: Bool {
         // CodexBar polls every couple of minutes — anything older than

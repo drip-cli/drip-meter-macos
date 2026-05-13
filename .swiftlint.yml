@@ -8,6 +8,13 @@ disabled_rules:
   - file_length
   - type_body_length
   - cyclomatic_complexity
+  # Conflicts with SwiftFormat's `wrapMultilineStatementBraces` /
+  # `braces` rules: SwiftFormat puts `{` on its own line for
+  # multi-line `if`/`guard` conditions (Swift convention), while
+  # SwiftLint's `opening_brace` insists same-line. SwiftFormat
+  # already enforces the brace placement we want, so we drop this
+  # rule to break the tug-of-war.
+  - opening_brace
 
 opt_in_rules:
   - empty_count

@@ -8,7 +8,9 @@ public enum RefreshCadence: String, CaseIterable, Codable, Sendable, Identifiabl
     case fiveMinutes
     case fifteenMinutes
 
-    public var id: String { rawValue }
+    public var id: String {
+        rawValue
+    }
 
     public var displayName: String {
         switch self {
@@ -37,7 +39,9 @@ public enum MenuBarLabelStyle: String, CaseIterable, Codable, Sendable, Identifi
     case tokensSaved
     case dollarsSaved
 
-    public var id: String { rawValue }
+    public var id: String {
+        rawValue
+    }
 
     public var displayName: String {
         switch self {
@@ -55,7 +59,9 @@ public enum HistoryRange: String, CaseIterable, Codable, Sendable, Identifiable 
     case days90
     case lifetime
 
-    public var id: String { rawValue }
+    public var id: String {
+        rawValue
+    }
 
     public var displayName: String {
         switch self {
@@ -191,46 +197,46 @@ public final class SettingsStore {
         }
 
         let cadenceRaw = defaults.string(forKey: Keys.refreshCadence) ?? RefreshCadence.twoMinutes.rawValue
-        self.refreshCadence = RefreshCadence(rawValue: cadenceRaw) ?? .twoMinutes
-        self.liveWatchEnabled = (defaults.object(forKey: Keys.liveWatchEnabled) as? Bool) ?? true
-        self.launchAtLogin = defaults.bool(forKey: Keys.launchAtLogin)
+        refreshCadence = RefreshCadence(rawValue: cadenceRaw) ?? .twoMinutes
+        liveWatchEnabled = (defaults.object(forKey: Keys.liveWatchEnabled) as? Bool) ?? true
+        launchAtLogin = defaults.bool(forKey: Keys.launchAtLogin)
 
         let labelRaw = defaults.string(forKey: Keys.menuBarLabelStyle) ?? MenuBarLabelStyle.iconOnly.rawValue
-        self.menuBarLabelStyle = MenuBarLabelStyle(rawValue: labelRaw) ?? .iconOnly
+        menuBarLabelStyle = MenuBarLabelStyle(rawValue: labelRaw) ?? .iconOnly
         let storedWidth = defaults.double(forKey: Keys.popoverWidth)
-        self.popoverWidth = storedWidth >= 320 ? storedWidth : 380
-        self.compactMode = defaults.bool(forKey: Keys.compactMode)
+        popoverWidth = storedWidth >= 320 ? storedWidth : 380
+        compactMode = defaults.bool(forKey: Keys.compactMode)
         let historyRaw = defaults.string(forKey: Keys.defaultHistoryRange) ?? HistoryRange.days7.rawValue
-        self.defaultHistoryRange = HistoryRange(rawValue: historyRaw) ?? .days7
+        defaultHistoryRange = HistoryRange(rawValue: historyRaw) ?? .days7
 
         if let stored = defaults.array(forKey: Keys.enabledAgents) as? [String] {
-            self.enabledAgents = Set(stored.compactMap { DripAgent(rawValue: $0) })
+            enabledAgents = Set(stored.compactMap { DripAgent(rawValue: $0) })
         } else {
-            self.enabledAgents = Set(DripAgent.allCases)
+            enabledAgents = Set(DripAgent.allCases)
         }
 
-        self.costModelId = defaults.string(forKey: Keys.costModelId) ?? CostModel.sonnet46.id
+        costModelId = defaults.string(forKey: Keys.costModelId) ?? CostModel.sonnet46.id
         if defaults.object(forKey: Keys.customPricePerMtok) != nil {
             let value = defaults.double(forKey: Keys.customPricePerMtok)
-            self.customPricePerMtok = value > 0 ? value : nil
+            customPricePerMtok = value > 0 ? value : nil
         } else {
-            self.customPricePerMtok = nil
+            customPricePerMtok = nil
         }
 
-        self.milestoneNotificationsEnabled = (defaults.object(forKey: Keys.milestoneNotificationsEnabled) as? Bool) ?? true
+        milestoneNotificationsEnabled = (defaults.object(forKey: Keys.milestoneNotificationsEnabled) as? Bool) ?? true
 
         let ideRaw = defaults.string(forKey: Keys.preferredIDE) ?? IDEPreference.finder.rawValue
-        self.preferredIDE = IDEPreference(rawValue: ideRaw) ?? .finder
+        preferredIDE = IDEPreference(rawValue: ideRaw) ?? .finder
 
-        self.dripBinaryPathOverride = defaults.string(forKey: Keys.dripBinaryPathOverride) ?? ""
+        dripBinaryPathOverride = defaults.string(forKey: Keys.dripBinaryPathOverride) ?? ""
 
         // Default 25K — calibrated against typical solo-dev sessions where a
         // wired-up Claude Code refactor saves 30-100K tokens of input. Users
         // can lower it on quiet days or zero it to hide the feature.
         let storedTarget = defaults.integer(forKey: Keys.dailyTokenTarget)
-        self.dailyTokenTarget = storedTarget > 0 ? Int64(storedTarget) : 25_000
+        dailyTokenTarget = storedTarget > 0 ? Int64(storedTarget) : 25000
 
-        self.bestStreakDays = defaults.integer(forKey: Keys.bestStreakDays)
+        bestStreakDays = defaults.integer(forKey: Keys.bestStreakDays)
     }
 
     public func resolvedBinaryOverride() -> String? {

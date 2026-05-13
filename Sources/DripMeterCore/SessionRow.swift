@@ -21,7 +21,9 @@ public struct SessionRow: Identifiable, Sendable, Equatable {
     /// Unix seconds of the most recent compaction, or `nil` if none.
     public let lastCompactionAt: Int64?
 
-    public var tokensSaved: Int64 { max(0, tokensFull - tokensSent) }
+    public var tokensSaved: Int64 {
+        max(0, tokensFull - tokensSent)
+    }
 
     public var reductionPct: Int {
         guard tokensFull > 0 else { return 0 }
@@ -48,8 +50,8 @@ public struct DailyTotal: Sendable, Equatable {
     public let reads: Int64
 }
 
-extension DripDatabase {
-    public func fetchSessions(limit: Int = 30) throws -> [SessionRow] {
+public extension DripDatabase {
+    func fetchSessions(limit: Int = 30) throws -> [SessionRow] {
         guard exists else { return [] }
         let db = try DripDatabase.openReadOnly(at: url)
         defer { sqlite3_close_v2(db) }
@@ -87,11 +89,11 @@ extension DripDatabase {
 
         var rows: [SessionRow] = []
         while sqlite3_step(stmt) == SQLITE_ROW {
-            let id = (sqlite3_column_text(stmt, 0)).map { String(cString: $0) } ?? ""
-            let agentTag = (sqlite3_column_text(stmt, 1)).map { String(cString: $0) }
-            let strategy = (sqlite3_column_text(stmt, 2)).map { String(cString: $0) }
-            let context = (sqlite3_column_text(stmt, 3)).map { String(cString: $0) }
-            let cwd = (sqlite3_column_text(stmt, 4)).map { String(cString: $0) }
+            let id = sqlite3_column_text(stmt, 0).map { String(cString: $0) } ?? ""
+            let agentTag = sqlite3_column_text(stmt, 1).map { String(cString: $0) }
+            let strategy = sqlite3_column_text(stmt, 2).map { String(cString: $0) }
+            let context = sqlite3_column_text(stmt, 3).map { String(cString: $0) }
+            let cwd = sqlite3_column_text(stmt, 4).map { String(cString: $0) }
             let started = sqlite3_column_int64(stmt, 5)
             let lastActive = sqlite3_column_int64(stmt, 6)
             let files = Int(sqlite3_column_int64(stmt, 7))
@@ -120,7 +122,7 @@ extension DripDatabase {
     }
 
     /// Total tokens saved today (UTC). Used by the daily target feature.
-    public func fetchTodayTotal() throws -> DailyTotal {
+    func fetchTodayTotal() throws -> DailyTotal {
         guard exists else {
             return DailyTotal(day: Self.todayUTC(), tokensSaved: 0, reads: 0)
         }
@@ -153,7 +155,7 @@ extension DripDatabase {
 
     /// Number of consecutive days (ending today) with at least one read.
     /// Used for the streak indicator.
-    public func fetchStreakDays() throws -> Int {
+    func fetchStreakDays() throws -> Int {
         guard exists else { return 0 }
         let db = try DripDatabase.openReadOnly(at: url)
         defer { sqlite3_close_v2(db) }
@@ -180,13 +182,16 @@ extension DripDatabase {
         var streak = 0
         var expected = Date()
         while sqlite3_step(stmt) == SQLITE_ROW {
-            let raw = (sqlite3_column_text(stmt, 0)).map { String(cString: $0) } ?? ""
+            let raw = sqlite3_column_text(stmt, 0).map { String(cString: $0) } ?? ""
             guard let date = formatter.date(from: raw) else { continue }
             // Walk back day-by-day; break as soon as the chain skips one.
             if calendar.isDate(date, inSameDayAs: expected) {
                 streak += 1
                 expected = calendar.date(byAdding: .day, value: -1, to: expected) ?? expected
-            } else if calendar.isDate(date, inSameDayAs: calendar.date(byAdding: .day, value: -1, to: expected) ?? expected) {
+            } else if calendar.isDate(
+                date,
+                inSameDayAs: calendar.date(byAdding: .day, value: -1, to: expected) ?? expected
+            ) {
                 streak += 1
                 expected = calendar.date(byAdding: .day, value: -2, to: expected) ?? expected
             } else if streak == 0 {
