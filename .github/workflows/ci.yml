@@ -1,0 +1,88 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+# Cancel in-progress runs for the same branch/PR — saves CI minutes
+# when someone pushes a fixup commit.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Validate every commit message in the PR against Conventional
+  # Commits. release-please reads these to bump the version and
+  # generate the CHANGELOG, so a malformed message silently breaks
+  # the release pipeline. Catch it at PR time.
+  commitlint:
+    name: commit messages
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install commitlint
+        run: |
+          npm install --no-save \
+            @commitlint/cli \
+            @commitlint/config-conventional
+
+      - name: Lint PR commits
+        run: |
+          npx commitlint \
+            --from "${{ github.event.pull_request.base.sha }}" \
+            --to   "${{ github.event.pull_request.head.sha }}" \
+            --verbose
+
+  # Style + lint: SwiftFormat (formatting) and SwiftLint (style/bugs).
+  # Both pre-installed via Homebrew on the macOS runner. `--lint` /
+  # `--strict` make a violation fail the job rather than auto-fix it,
+  # so PRs can't drift the codebase style.
+  lint:
+    name: swiftformat + swiftlint
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tooling
+        run: brew install swiftformat swiftlint
+
+      - name: swiftformat --lint
+        run: swiftformat --lint .
+
+      - name: swiftlint --strict
+        run: swiftlint lint --strict --quiet
+
+  # `swift build` + `swift test` on macOS — DripMeter is macOS-only
+  # (SwiftUI menu bar app, macOS 14+) so no Linux/Windows matrix.
+  # macos-latest is ARM; if we ever need Intel-specific tests, add
+  # `macos-13` to the matrix here.
+  test:
+    name: test (macos-latest)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Swift toolchain
+        run: swift --version
+
+      - name: Cache SwiftPM build
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            ~/Library/Caches/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.resolved', 'Package.swift') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
+      - name: swift build (incl. tests)
+        run: swift build --build-tests
+
+      - name: swift test
+        run: swift test --skip-build
