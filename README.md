@@ -72,13 +72,31 @@ DRIP binary**.
 
 ## Install
 
-### Homebrew (recommended, planned)
+### Homebrew (recommended)
 
 ```bash
-brew install --cask drip-cli/drip/drip-meter
+brew tap drip-cli/drip
+brew install --cask dripmeter
 ```
 
-### From source (today)
+Pair with the CLI for live data:
+
+```bash
+brew install drip-cli/drip/drip
+drip init -g                         # wires DRIP into Claude Code
+```
+
+Both packages live in the same tap at
+[`drip-cli/homebrew-drip`](https://github.com/drip-cli/homebrew-drip).
+`brew upgrade --cask drip-cli/drip/dripmeter` pulls newer versions
+when this repo releases them.
+
+DripMeter is currently **ad-hoc signed** (no Apple Developer ID
+yet), so Gatekeeper blocks the first launch. Authorise it in
+**System Settings → Privacy & Security**, or run
+`xattr -d com.apple.quarantine /Applications/DripMeter.app`.
+
+### From source
 
 ```bash
 git clone git@github.com:drip-cli/drip-meter-macos.git
@@ -87,9 +105,8 @@ cd drip-meter-macos
 open DripMeter.app
 ```
 
-Requirements for building: Swift 6.2+ toolchain, macOS 14+.
-`CODEXBAR_SIGNING=adhoc ./Scripts/package_app.sh` ad-hoc signs when you
-don't have an Apple Developer account.
+Requirements: Swift 6.0+ toolchain, macOS 14 Sonoma+.
+`package_app.sh` already ad-hoc signs and strips xattrs.
 
 ---
 

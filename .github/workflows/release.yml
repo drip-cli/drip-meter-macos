@@ -1,0 +1,192 @@
+# Release pipeline for DripMeter — tag-driven.
+#
+# Push a `vX.Y.Z` tag and this workflow:
+#   1. Builds `DripMeter.app` on macOS (release config) via
+#      package_app.sh, which already handles xattr stripping and
+#      ad-hoc signing.
+#   2. Zips the bundle and uploads it as `DripMeter-vX.Y.Z.zip`
+#      plus a matching `SHA256SUMS` file to the GitHub Release.
+#   3. Regenerates `Casks/dripmeter.rb` in `drip-cli/homebrew-drip`
+#      with the new version + sha256 and pushes it. `brew upgrade
+#      drip-cli/drip/dripmeter` is live within minutes.
+
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish (e.g. v0.1.0). Leave blank to dry-run."
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build DripMeter.app
+    runs-on: macos-14
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      sha256: ${{ steps.hash.outputs.sha256 }}
+      asset_name: ${{ steps.hash.outputs.asset_name }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # `version.env` is the single source of truth for the marketing
+      # version. We pin the tag against it so the artifact filename
+      # and the cask version line up. If they don't match, the release
+      # fails loudly here rather than shipping a mismatched cask.
+      - name: Resolve version
+        id: version
+        run: |
+          set -euo pipefail
+          source ./version.env
+          TAG="${GITHUB_REF_NAME:-${{ github.event.inputs.tag }}}"
+          TAG_VERSION="${TAG#v}"
+          if [ "$TAG_VERSION" != "$DRIPMETER_VERSION" ]; then
+            echo "::error::Tag $TAG (v$TAG_VERSION) does not match version.env (DRIPMETER_VERSION=$DRIPMETER_VERSION)."
+            exit 1
+          fi
+          echo "version=$DRIPMETER_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building DripMeter v$DRIPMETER_VERSION"
+
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_16.app
+
+      - name: Package DripMeter.app
+        run: |
+          # CONFIGURATION=release is the default in package_app.sh.
+          # It runs swift build, copies the binary into the bundle,
+          # strips xattrs via `ditto --norsrc --noextattr --noacl`,
+          # and ad-hoc signs. No Apple Developer ID involved — users
+          # who install via Homebrew will need to authorise the app
+          # in System Settings → Privacy & Security on first launch.
+          ./Scripts/package_app.sh
+
+      - name: Compress + checksum
+        id: hash
+        run: |
+          set -euo pipefail
+          V="${{ steps.version.outputs.version }}"
+          ASSET="DripMeter-v${V}.zip"
+          ditto -c -k --keepParent DripMeter.app "$ASSET"
+          SHA=$(shasum -a 256 "$ASSET" | cut -d' ' -f1)
+          echo "$SHA  $ASSET" > SHA256SUMS
+          echo "asset_name=$ASSET" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Asset: $ASSET — sha256: $SHA"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dripmeter-app
+          path: |
+            DripMeter-v${{ steps.version.outputs.version }}.zip
+            SHA256SUMS
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.inputs.tag != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dripmeter-app
+          path: dist
+
+      - name: Create or update release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name || github.event.inputs.tag }}
+          generate_release_notes: true
+          files: |
+            dist/DripMeter-*.zip
+            dist/SHA256SUMS
+
+  # Auto-bumps the Homebrew cask in drip-cli/homebrew-drip after
+  # every published release. Skipped on workflow_dispatch dry-runs
+  # (no tag), and skipped if HOMEBREW_TAP_TOKEN isn't set so forks
+  # build cleanly without secrets.
+  update-homebrew:
+    name: Bump Homebrew cask
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Skip if HOMEBREW_TAP_TOKEN unset
+        if: env.HOMEBREW_TAP_TOKEN == ''
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          echo "::warning::HOMEBREW_TAP_TOKEN not set — skipping tap update."
+          exit 0
+
+      - name: Checkout homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: drip-cli/homebrew-drip
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-drip
+
+      - name: Render cask
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          SHA256: ${{ needs.build.outputs.sha256 }}
+        run: |
+          mkdir -p homebrew-drip/Casks
+          cat > homebrew-drip/Casks/dripmeter.rb <<CASK
+          cask "dripmeter" do
+            version "${VERSION}"
+            sha256 "${SHA256}"
+
+            url "https://github.com/drip-cli/drip-meter-macos/releases/download/v#{version}/DripMeter-v#{version}.zip"
+            name "DripMeter"
+            desc "Live token-savings meter for DRIP, in your macOS menu bar"
+            homepage "https://github.com/drip-cli/drip-meter-macos"
+
+            depends_on macos: ">= :sonoma"
+
+            app "DripMeter.app"
+
+            zap trash: [
+              "~/Library/Application Support/io.drip-cli.dripmeter",
+              "~/Library/Preferences/io.drip-cli.dripmeter.plist",
+              "~/Library/Caches/io.drip-cli.dripmeter",
+              "~/Library/Saved Application State/io.drip-cli.dripmeter.savedState",
+            ]
+
+            caveats <<~EOS
+              DripMeter is ad-hoc signed (no Apple Developer ID yet). The
+              first launch will be blocked by Gatekeeper — open System
+              Settings → Privacy & Security and click "Open Anyway", or
+              run:
+
+                xattr -d com.apple.quarantine /Applications/DripMeter.app
+
+              Pair with the DRIP CLI for live data:
+                brew install drip-cli/drip/drip && drip init -g
+            EOS
+          end
+          CASK
+
+      - name: Commit and push
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          cd homebrew-drip
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/dripmeter.rb
+          git diff --staged --quiet && exit 0
+          git commit -m "dripmeter ${VERSION}"
+          git push
