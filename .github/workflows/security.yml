@@ -59,8 +59,19 @@ jobs:
 
   # CodeQL static analysis for Swift. macOS runner — Swift CodeQL
   # only supports macOS-hosted analysis.
+  #
+  # Deliberately NOT triggered on pull_request: Swift CodeQL requires
+  # a full instrumented `swift build` (no `build-mode: none` like JS
+  # or Python), which on macos-latest runs ~10 min per PR. For a
+  # small AppKit/SwiftUI codebase the data-flow findings rarely
+  # change between PR and merged state — running on push to the
+  # long-lived branches plus a weekly cron catches the same issues
+  # without taxing every PR. Findings surface in the repo's Security
+  # tab. SwiftLint already enforces the high-frequency rules
+  # (force-unwrap, force-cast, force-try) on PR.
   codeql:
     name: CodeQL (swift)
+    if: github.event_name != 'pull_request'
     runs-on: macos-latest
     permissions:
       actions: read
