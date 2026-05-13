@@ -25,6 +25,15 @@ struct AppIconView: View {
 }
 
 enum AppIconLoader {
+    // `@MainActor` is required because `NSApp` and
+    // `NSApplication.applicationIconImage` are declared with
+    // `NS_SWIFT_UI_ACTOR` (main-actor isolated). Under Swift 6 strict
+    // concurrency — which Package.swift opts into via
+    // `.enableUpcomingFeature("StrictConcurrency")` — a nonisolated
+    // static method can't read those without explicit isolation.
+    // The function is only ever called from SwiftUI view bodies, so
+    // we're always on the main actor at the call site anyway.
+    @MainActor
     static func image() -> NSImage? {
         // 1. Bundle's compiled .icns shipped at Contents/Resources/AppIcon.icns
         if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
