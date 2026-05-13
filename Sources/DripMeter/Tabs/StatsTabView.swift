@@ -54,9 +54,11 @@ private struct LifetimeSummaryCard: View {
                     .textCase(.uppercase)
                 Spacer()
                 if report.totalReads > 0 {
-                    Text("\(DripFormatter.compactInteger(report.totalReads)) reads · \(DripFormatter.compactInteger(report.filesTracked)) files")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                    Text(
+                        "\(DripFormatter.compactInteger(report.totalReads)) reads · \(DripFormatter.compactInteger(report.filesTracked)) files"
+                    )
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
                 }
             }
 
@@ -209,10 +211,12 @@ private struct EmptyHistoryHint: View {
             Label("No history yet", systemImage: "calendar")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary)
-            Text("Wire DRIP into an agent and your daily savings will start filling this tab — rollup, heatmap and best days will surface automatically.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            Text(
+                "Wire DRIP into an agent and your daily savings will start filling this tab — rollup, heatmap and best days will surface automatically."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.vertical, 4)
     }

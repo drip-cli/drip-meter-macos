@@ -112,7 +112,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let store: DripStore
 
     override init() {
-        self.store = DripStore(settings: SettingsStore.shared)
+        store = DripStore(settings: SettingsStore.shared)
         super.init()
     }
 

@@ -165,7 +165,9 @@ private struct WeekStripView: View {
 
         // Index history by day for O(1) lookup.
         var byDay: [String: MeterReport.DayBucket] = [:]
-        for bucket in history { byDay[bucket.day] = bucket }
+        for bucket in history {
+            byDay[bucket.day] = bucket
+        }
 
         // Compute the Monday-anchored week containing today.
         let weekday = calendar.component(.weekday, from: today)

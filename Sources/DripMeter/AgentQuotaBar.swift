@@ -89,4 +89,3 @@ private struct QuotaBar: View {
         }
     }
 }
-

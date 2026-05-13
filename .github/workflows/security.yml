@@ -1,0 +1,98 @@
+name: security
+
+# Security sweep — equivalent to drip-cli/drip's security.yml, scoped
+# to what's actually meaningful for a Swift / SwiftPM project.
+#
+# What's covered
+# --------------
+# - dependency-review: GitHub-side diff of the SwiftPM dependency graph
+#   between the PR head and base. Blocks PRs that introduce a dependency
+#   carrying a high-severity advisory or a license that breaks our
+#   allowlist. PR-only because the diff is meaningless on direct pushes.
+# - codeql (swift): static analysis for security issues in our own
+#   sources. Apple-supported language analyzer. Runs on PR, push to
+#   the long-lived branches, and on a weekly schedule so newly-published
+#   CodeQL rule packs surface even when the code hasn't changed.
+#
+# What's deliberately not here
+# ----------------------------
+# - cargo-deny / cargo-audit: Rust-specific. The SwiftPM ecosystem
+#   doesn't have a comparable advisory DB; GitHub's dependency-review
+#   action + Dependabot security alerts (already enabled at the repo
+#   level) cover the same surface.
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    # Monday 06:00 UTC — early enough that any new finding surfaces
+    # before the working week starts.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Compares the SwiftPM dependency graph between PR head and base.
+  # Blocks PRs that introduce dependencies with known high-severity
+  # advisories or incompatible licenses. PR-only.
+  dependency-review:
+    name: dependency review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
+
+  # CodeQL static analysis for Swift. macOS runner — Swift CodeQL
+  # only supports macOS-hosted analysis.
+  #
+  # Deliberately NOT triggered on pull_request: Swift CodeQL requires
+  # a full instrumented `swift build` (no `build-mode: none` like JS
+  # or Python), which on macos-latest runs ~10 min per PR. For a
+  # small AppKit/SwiftUI codebase the data-flow findings rarely
+  # change between PR and merged state — running on push to the
+  # long-lived branches plus a weekly cron catches the same issues
+  # without taxing every PR. Findings surface in the repo's Security
+  # tab. SwiftLint already enforces the high-frequency rules
+  # (force-unwrap, force-cast, force-try) on PR.
+  codeql:
+    name: CodeQL (swift)
+    if: github.event_name != 'pull_request'
+    runs-on: macos-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: swift
+          # `security-and-quality` is the broader query suite; the
+          # default `security-extended` would miss style-adjacent
+          # findings that often correlate with bugs.
+          queries: security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:swift"

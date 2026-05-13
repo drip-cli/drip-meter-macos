@@ -1,6 +1,6 @@
+@testable import DripMeterCore
 import Foundation
 import Testing
-@testable import DripMeterCore
 
 @Suite("MeterReport.Storage decoding")
 struct MeterReportStorageTests {
@@ -48,8 +48,8 @@ struct MeterReportStorageTests {
         #expect(storage.dbSizeBytes == 163_840)
         #expect(storage.cacheSizeBytes == 2_048_000)
         #expect(storage.totalBytes == 2_211_840)
-        #expect(storage.compactableBytes == 65_000)
-        #expect(storage.dedupSavings == 50_000)
+        #expect(storage.compactableBytes == 65000)
+        #expect(storage.dedupSavings == 50000)
         #expect(storage.uniqueHashes == 16)
         #expect(storage.orphanFiles == 1)
     }
@@ -109,7 +109,7 @@ struct CostModelTests {
     func projectsMonthlyFromObservedHour() {
         let report = CostModel.sonnet46
         // 100K saved over 1 hour → 2.4M / day → 72M / month → $216 at $3/Mtok
-        let projected = report.project(savedTokens: 100_000, elapsedSecs: 3_600, horizon: .month)
+        let projected = report.project(savedTokens: 100_000, elapsedSecs: 3600, horizon: .month)
         #expect(abs(projected - 216.0) < 0.01)
     }
 
@@ -232,7 +232,7 @@ struct CompactionWatcherTests {
 struct MilestoneCrossingTests {
     @Test("Token milestones fire at the documented thresholds")
     func tokenMilestones() {
-        #expect(Milestone.tokens100K.isCrossed(tokensSaved: 99_999, dollarsSaved: 0) == false)
+        #expect(Milestone.tokens100K.isCrossed(tokensSaved: 99999, dollarsSaved: 0) == false)
         #expect(Milestone.tokens100K.isCrossed(tokensSaved: 100_000, dollarsSaved: 0))
         #expect(Milestone.tokens1M.isCrossed(tokensSaved: 1_000_001, dollarsSaved: 0))
         #expect(Milestone.tokens10M.isCrossed(tokensSaved: 9_999_999, dollarsSaved: 0) == false)

@@ -81,10 +81,12 @@ private struct EventRow: View {
                     .font(.caption.weight(.medium))
                     .monospacedDigit()
                     .foregroundStyle(event.tokensSaved > 0 ? .primary : .secondary)
-                Text("\(DripFormatter.compactInteger(event.tokensSent))/\(DripFormatter.compactInteger(event.tokensFull))")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                Text(
+                    "\(DripFormatter.compactInteger(event.tokensSent))/\(DripFormatter.compactInteger(event.tokensFull))"
+                )
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
             }
         }
         .padding(.vertical, 3)

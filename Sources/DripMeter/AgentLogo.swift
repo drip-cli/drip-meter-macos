@@ -31,11 +31,10 @@ struct AgentLogo: View {
 
 enum AgentLogoLoader {
     static func image(for agent: DripAgent) -> NSImage? {
-        let baseName: String
-        switch agent {
-        case .claude: baseName = "ProviderIcon-claude"
-        case .codex: baseName = "ProviderIcon-codex"
-        case .gemini: baseName = "ProviderIcon-gemini"
+        let baseName = switch agent {
+        case .claude: "ProviderIcon-claude"
+        case .codex: "ProviderIcon-codex"
+        case .gemini: "ProviderIcon-gemini"
         }
         guard let url = Bundle.module.url(forResource: baseName, withExtension: "svg") else { return nil }
         return NSImage(contentsOf: url)

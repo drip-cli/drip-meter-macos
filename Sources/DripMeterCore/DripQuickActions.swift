@@ -79,7 +79,7 @@ extension DripCLI {
         try await runRaw(action.arguments)
     }
 
-    fileprivate func runRaw(_ args: [String]) async throws -> String {
+    private func runRaw(_ args: [String]) async throws -> String {
         // Reuse the existing private runner via a public passthrough we add
         // here. Splitting the helper into the same actor keeps the timeout
         // and env-scrubbing semantics identical.

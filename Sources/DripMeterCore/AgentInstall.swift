@@ -8,10 +8,10 @@ import OSLog
 /// CLI agree on what "installed" means.
 public struct AgentInstallStatus: Sendable, Equatable, Identifiable {
     public enum State: String, Sendable, Equatable {
-        case notInstalled       // config file absent
-        case configFoundNoDrip  // config exists, but no drip hook/MCP entry
-        case wired              // drip is referenced in the config
-        case unknown            // probe failed (permissions, parse error)
+        case notInstalled // config file absent
+        case configFoundNoDrip // config exists, but no drip hook/MCP entry
+        case wired // drip is referenced in the config
+        case unknown // probe failed (permissions, parse error)
     }
 
     public let agent: DripAgent
@@ -19,9 +19,13 @@ public struct AgentInstallStatus: Sendable, Equatable, Identifiable {
     public let configPath: String?
     public let detail: String?
 
-    public var id: DripAgent { agent }
+    public var id: DripAgent {
+        agent
+    }
 
-    public var isWired: Bool { state == .wired }
+    public var isWired: Bool {
+        state == .wired
+    }
 
     public var initCommand: String {
         switch agent {

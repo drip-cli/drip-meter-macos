@@ -36,11 +36,12 @@ public final class DripStore {
     public private(set) var agents: [AgentBreakdown] = DripAgent.allCases.map {
         AgentBreakdown(agent: $0, sessions: 0, filesTracked: 0, tokensFull: 0, tokensSent: 0, lastActiveAt: nil)
     }
+
     public private(set) var agentInstall: [AgentInstallStatus] = AgentInstallProbe.probeAll()
     public private(set) var recentEvents: [ReplayEvent] = []
     public private(set) var topFiles: [MeterReport.PerFile] = []
     public private(set) var sessions: [SessionRow] = []
-    public private(set) var todayTotal: DailyTotal = DailyTotal(
+    public private(set) var todayTotal: DailyTotal = .init(
         day: "",
         tokensSaved: 0,
         reads: 0
@@ -79,9 +80,9 @@ public final class DripStore {
     ) {
         self.settings = settings
         self.database = database
-        self.cli = DripCLI(binaryPath: settings.resolvedBinaryOverride())
-        self.milestones = MilestoneTracker()
-        self.compactions = CompactionWatcher()
+        cli = DripCLI(binaryPath: settings.resolvedBinaryOverride())
+        milestones = MilestoneTracker()
+        compactions = CompactionWatcher()
     }
 
     public func start() {
@@ -133,8 +134,8 @@ public final class DripStore {
         isRefreshing = true
         defer { isRefreshing = false }
 
-        let cli = self.cli
-        let database = self.database
+        let cli = cli
+        let database = database
 
         do {
             let version = try await cli.version()
@@ -154,32 +155,35 @@ public final class DripStore {
         do {
             let report = try await cli.meterReport()
             let agents = (try? database.fetchAgentBreakdown()) ?? []
-            let events = (try? database.fetchRecentEvents(since: Int64(Date().timeIntervalSince1970) - 3_600, limit: 50)) ?? []
+            let events = (try? database.fetchRecentEvents(
+                since: Int64(Date().timeIntervalSince1970) - 3600,
+                limit: 50
+            )) ?? []
             let topFiles = (try? database.fetchTopFiles(limit: 50)) ?? []
             let sessions = (try? database.fetchSessions(limit: 30)) ?? []
             let today = (try? database.fetchTodayTotal()) ?? DailyTotal(day: "", tokensSaved: 0, reads: 0)
             let streak = (try? database.fetchStreakDays()) ?? 0
             self.report = report
             self.agents = backfillMissingAgents(agents)
-            self.recentEvents = events
+            recentEvents = events
             self.topFiles = topFiles.isEmpty ? report.top : topFiles
             self.sessions = sessions
-            self.todayTotal = today
-            self.streakDays = streak
+            todayTotal = today
+            streakDays = streak
             if streak > settings.bestStreakDays {
                 settings.bestStreakDays = streak
             }
-            self.agentQuotas = CodexBarBridge.fetchQuotas()
-            self.codexBarInstalled = CodexBarBridge.isInstalled
-            self.loadState = .loaded(at: Date())
-            self.lastError = nil
-            self.refreshAgentInstall()
-            self.notifyMilestonesIfNeeded(report: report)
-            self.notifyCompactionThresholdsIfNeeded(report: report)
+            agentQuotas = CodexBarBridge.fetchQuotas()
+            codexBarInstalled = CodexBarBridge.isInstalled
+            loadState = .loaded(at: Date())
+            lastError = nil
+            refreshAgentInstall()
+            notifyMilestonesIfNeeded(report: report)
+            notifyCompactionThresholdsIfNeeded(report: report)
         } catch {
             let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-            self.loadState = .error(message: message)
-            self.lastError = message
+            loadState = .error(message: message)
+            lastError = message
             logger.error("Refresh failed: \(message, privacy: .public)")
         }
     }
@@ -271,7 +275,9 @@ public final class DripStore {
 /// across the `@Sendable` boundary without forcing the store to be Sendable.
 private final class WeakStoreBox: @unchecked Sendable {
     weak var store: DripStore?
-    init(store: DripStore) { self.store = store }
+    init(store: DripStore) {
+        self.store = store
+    }
 }
 
 /// Trailing-edge debouncer for FSEvents bursts.

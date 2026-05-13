@@ -79,6 +79,18 @@ jobs:
           # in System Settings → Privacy & Security on first launch.
           ./Scripts/package_app.sh
 
+      - name: Verify SPM sub-bundle Info.plist
+        # Regression guard. SwiftPM does not emit an Info.plist for
+        # resource bundles on macOS, so `Bundle.module` crashes on
+        # first asset lookup. package_app.sh stamps it manually; if
+        # a future refactor loses that step, fail loudly here rather
+        # than ship a broken .app to Homebrew users.
+        run: |
+          set -euo pipefail
+          PLIST="DripMeter.app/Contents/Resources/DripMeter_DripMeter.bundle/Info.plist"
+          test -f "$PLIST" || { echo "::error::Missing $PLIST — Bundle.module would crash on launch"; exit 1; }
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$PLIST"
+
       - name: Compress + checksum
         id: hash
         run: |
@@ -134,83 +146,71 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     steps:
-      - name: Skip if HOMEBREW_TAP_TOKEN unset
-        if: env.HOMEBREW_TAP_TOKEN == ''
+      # Probe the token once and gate every subsequent step on the
+      # output. Earlier revision used `if: env.HOMEBREW_TAP_TOKEN ==
+      # ''` on a step that *also* set the `env:` block — workflow
+      # expressions are evaluated before `env:` is applied to the
+      # step, so the check always saw an empty string and skipped
+      # the entire job even when the secret was set. The drip-cli
+      # pattern (explicit probe step + output) sidesteps this trap.
+      - name: Probe HOMEBREW_TAP_TOKEN
+        id: probe
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
-          echo "::warning::HOMEBREW_TAP_TOKEN not set — skipping tap update."
-          exit 0
+          if [[ -z "${HOMEBREW_TAP_TOKEN:-}" ]]; then
+            echo "has-token=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::HOMEBREW_TAP_TOKEN not set — skipping tap update."
+          else
+            echo "has-token=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Checkout homebrew tap
+        if: steps.probe.outputs.has-token == 'true'
         uses: actions/checkout@v4
         with:
           repository: drip-cli/homebrew-drip
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           path: homebrew-drip
 
-      - name: Render cask
+      # Surgical bump: rewrite only `version "..."` and `sha256 "..."`
+      # so hand-edits to caveats / zap / postflight stick. The earlier
+      # full-template render clobbered everything — notably the
+      # narrow `xattr -d com.apple.quarantine` postflight (which only
+      # targets the top-level bundle xattr) was being replaced by a
+      # recursive `xattr -cr` that crashes on SIP-protected internals
+      # like `Contents/_CodeSignature/`. Keep the cask as the source
+      # of truth for everything that isn't version/sha256.
+      - name: Bump Casks/dripmeter.rb
+        if: steps.probe.outputs.has-token == 'true'
         env:
           VERSION: ${{ needs.build.outputs.version }}
           SHA256: ${{ needs.build.outputs.sha256 }}
         run: |
-          mkdir -p homebrew-drip/Casks
-          cat > homebrew-drip/Casks/dripmeter.rb <<CASK
-          cask "dripmeter" do
-            version "${VERSION}"
-            sha256 "${SHA256}"
-
-            url "https://github.com/drip-cli/drip-meter-macos/releases/download/v#{version}/DripMeter-v#{version}.zip"
-            name "DripMeter"
-            desc "Live token-savings meter for DRIP, in your macOS menu bar"
-            homepage "https://github.com/drip-cli/drip-meter-macos"
-
-            depends_on macos: ">= :sonoma"
-
-            app "DripMeter.app"
-
-            # DripMeter is ad-hoc signed (no Apple Developer ID yet).
-            # Without this xattr -cr, the freshly-installed app stays
-            # quarantined and Gatekeeper blocks the first launch with
-            # "DripMeter cannot be opened because Apple cannot check
-            # it for malicious software". Stripping every extended
-            # attribute is the canonical workaround for ad-hoc signed
-            # open-source casks.
-            postflight do
-              system_command "/usr/bin/xattr",
-                             args: ["-cr", "#{appdir}/DripMeter.app"],
-                             sudo: false
-            end
-
-            zap trash: [
-              "~/Library/Application Support/io.drip-cli.dripmeter",
-              "~/Library/Preferences/io.drip-cli.dripmeter.plist",
-              "~/Library/Caches/io.drip-cli.dripmeter",
-              "~/Library/Saved Application State/io.drip-cli.dripmeter.savedState",
-            ]
-
-            caveats <<~EOS
-              DripMeter is ad-hoc signed (no Apple Developer ID yet).
-              The cask automatically strips the quarantine xattr on
-              install, so the first launch should just work. If macOS
-              still complains, run:
-
-                xattr -cr /Applications/DripMeter.app && open /Applications/DripMeter.app
-
-              Pair with the DRIP CLI for live data:
-                brew install drip-cli/drip/drip && drip init -g
-            EOS
-          end
-          CASK
+          set -euo pipefail
+          cd homebrew-drip
+          sed -i -E "s|^  version \"[^\"]+\"|  version \"${VERSION}\"|" Casks/dripmeter.rb
+          sed -i -E "s|^  sha256 \"[^\"]+\"|  sha256 \"${SHA256}\"|" Casks/dripmeter.rb
+          echo "── resulting top of cask ──"
+          head -5 Casks/dripmeter.rb
+          echo "── diff ──"
+          git diff Casks/dripmeter.rb
 
       - name: Commit and push
+        if: steps.probe.outputs.has-token == 'true'
         env:
           VERSION: ${{ needs.build.outputs.version }}
         run: |
+          set -euo pipefail
           cd homebrew-drip
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Casks/dripmeter.rb
-          git diff --staged --quiet && exit 0
+          # No-op guard: re-running the workflow on the same tag must
+          # not produce an empty commit.
+          if git diff --staged --quiet; then
+            echo "→ dripmeter.rb already at v${VERSION} — nothing to do"
+            exit 0
+          fi
           git commit -m "dripmeter ${VERSION}"
           git push

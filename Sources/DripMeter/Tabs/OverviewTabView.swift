@@ -24,7 +24,8 @@ struct OverviewTabView: View {
             }
 
             if let compaction = store.report.compaction,
-               compaction.totalCompactions > 0 {
+               compaction.totalCompactions > 0
+            {
                 Divider()
                 CompactionPanelView(
                     compaction: compaction,

@@ -33,7 +33,6 @@ struct MenuContentView: View {
         .frame(width: settings.popoverWidth)
     }
 
-    @ViewBuilder
     private var contentLayout: some View {
         VStack(spacing: 0) {
             TopHeaderBar()
@@ -110,10 +109,12 @@ private struct TopHeaderBar: View {
             .foregroundStyle(.secondary)
         case let .loaded(at):
             TimelineView(.periodic(from: at, by: 60)) { context in
-                Text("Updated \(DripFormatter.relativeTime(unixSeconds: Int64(at.timeIntervalSince1970), now: context.date))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                Text(
+                    "Updated \(DripFormatter.relativeTime(unixSeconds: Int64(at.timeIntervalSince1970), now: context.date))"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
             }
         case .idle:
             Text("Loading…")
@@ -138,9 +139,11 @@ private struct BinaryMissingView: View {
                 .padding(8)
                 .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
                 .textSelection(.enabled)
-            Link("Install docs →",
-                 destination: URL(string: "https://github.com/drip-cli/drip#install")!)
-                .font(.callout)
+            Link(
+                "Install docs →",
+                destination: URL(string: "https://github.com/drip-cli/drip#install")!
+            )
+            .font(.callout)
         }
         .frame(width: 320, alignment: .leading)
     }

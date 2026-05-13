@@ -34,7 +34,7 @@ public struct PeriodStats: Sendable, Equatable {
     }
 }
 
-extension Array where Element == MeterReport.DayBucket {
+public extension [MeterReport.DayBucket] {
     /// Roll up the last `windowDays` buckets (most recent at the tail of
     /// the array, the way `drip meter --history` emits them) into a
     /// `PeriodStats` summary.
@@ -42,7 +42,7 @@ extension Array where Element == MeterReport.DayBucket {
     /// `label` is a free-form display string ("This week", "Last 30 days").
     /// We pass it in instead of deriving from `windowDays` so callers can
     /// localise without dragging strings into the data layer.
-    public func rollup(windowDays: Int, label: String) -> PeriodStats {
+    func rollup(windowDays: Int, label: String) -> PeriodStats {
         let slice = Array(suffix(windowDays))
         var tokensSaved: Int64 = 0
         var tokensFull: Int64 = 0

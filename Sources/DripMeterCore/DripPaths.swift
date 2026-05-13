@@ -14,7 +14,7 @@ public enum DripPaths {
         "/usr/local/bin",
         "\(NSHomeDirectory())/.cargo/bin",
         "\(NSHomeDirectory())/.local/bin",
-        "/usr/bin",
+        "/usr/bin"
     ]
 
     /// Resolve the DRIP binary, trying `$PATH` first then the well-known prefixes.
