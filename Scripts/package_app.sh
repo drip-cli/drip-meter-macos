@@ -57,6 +57,28 @@ cp "${BIN_PATH}" "${APP_PATH}/Contents/MacOS/${APP_NAME}"
 # Assets.xcassets from there.
 if [[ -d "${RESOURCES_PATH}" ]]; then
     cp -R "${RESOURCES_PATH}" "${APP_PATH}/Contents/Resources/"
+
+    # SwiftPM does NOT emit an Info.plist for resource bundles on macOS, but
+    # `Bundle.module` calls NSBundle init which refuses to recognize a
+    # .bundle directory without one — the app crashes on first asset lookup
+    # with `_assertionFailure` inside `NSBundle.module`. Stamp a minimal
+    # Info.plist into the copied sub-bundle. Repro:
+    #   swift build -c release && ls .build/.../*.bundle/Info.plist  → absent
+    SUB_BUNDLE="${APP_PATH}/Contents/Resources/${APP_NAME}_${APP_NAME}.bundle"
+    cat > "${SUB_BUNDLE}/Info.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key><string>${BUNDLE_ID}.resources</string>
+    <key>CFBundleName</key><string>${APP_NAME}_${APP_NAME}</string>
+    <key>CFBundlePackageType</key><string>BNDL</string>
+    <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+    <key>CFBundleVersion</key><string>${BUILD_NUMBER}</string>
+    <key>CFBundleShortVersionString</key><string>${SHORT_VERSION}</string>
+</dict>
+</plist>
+EOF
 fi
 
 # Drop the generated .icns directly into Contents/Resources/ so Finder,
