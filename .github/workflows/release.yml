@@ -28,7 +28,12 @@ permissions:
 jobs:
   build:
     name: Build DripMeter.app
-    runs-on: macos-14
+    # `macos-15` runner ships Xcode 16 + Swift 6 by default — required
+    # because Package.swift declares `swift-tools-version: 6.0`. The
+    # older `macos-14` image only had Xcode 15 / Swift 5.10 and the
+    # previous `xcode-select` hack at /Applications/Xcode_16.app
+    # didn't exist on that image.
+    runs-on: macos-15
     outputs:
       version: ${{ steps.version.outputs.version }}
       sha256: ${{ steps.hash.outputs.sha256 }}
@@ -55,8 +60,14 @@ jobs:
           echo "version=$DRIPMETER_VERSION" >> "$GITHUB_OUTPUT"
           echo "Building DripMeter v$DRIPMETER_VERSION"
 
-      - name: Select Xcode
-        run: sudo xcode-select -switch /Applications/Xcode_16.app
+      # Sanity log so a future runner-image upgrade is obvious in the
+      # run history. macos-15's default Xcode should be >= 16 today,
+      # but pinning here gives us a single place to bump if Apple
+      # ships Swift 7 and we need to be explicit.
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
 
       - name: Package DripMeter.app
         run: |
